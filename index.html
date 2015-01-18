@@ -1,0 +1,65 @@
+<html>
+  <head>
+    <title>
+      Sociogram
+    </title>
+  </head>
+  <body>
+    <p>
+      <form id="form">
+	<label for="title" style="padding-right: 1ex; font-weight: bold;">Title:</label><input type="text" id="title" name="title">
+	<table id="table">
+	  <thead>
+	  <tr>
+	    <th>
+	      Name
+	    </th>
+	    <th>
+	      Positives
+	    </th>
+	    <th>
+	      Negatives
+	    </th>
+	  </tr>
+	  </thead>
+	  <tfoot>
+	    <tr>
+	      <td>
+		<button name="add" id="add">+</button>
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>
+		<input type="checkbox" name="positive" id="positive">Positive
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>
+		<input type="checkbox" name="negative" id="negative">Negative
+	      </td>
+	    </tr>
+	    <tr>
+	      <td>
+		<button name="generate" id="generate">Generate</button>
+	      </td>
+	    </tr>
+	  </tfoot>
+	  <tbody id="list">
+	  <tr>
+	    <td>
+	      <input type="text" id="name0" name="name0">
+	    </td>
+	    <td>
+	      <input type="text" id="positive0" name="positive0">
+	    </td>
+	    <td>
+	      <input type="text" id="negative0" name="negative0">
+	    </td>
+	  </tr>
+	  </tbody>
+	</table>
+      </form>
+    </p>
+  </body>
+  <script type="text/javascript" src="sociogram.js"></script>
+</html>
