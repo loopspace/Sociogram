@@ -43,6 +43,10 @@ function init()
 	 if v == '-g' then
 	    o = GRAPH
 	 end
+	 if v == '-h' then
+	    help()
+	    return
+	 end
 	 k = k + 1
 	 v = arg[k]
       end
@@ -298,6 +302,7 @@ function doTeXGraph(ofile,students,title)
    io.write([[
 \documentclass{article}
 \thispagestyle{empty}
+\usepackage[utf8]{inputenc}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning}
 \colorlet{pin}{black}
@@ -387,6 +392,23 @@ function doTeXGraph(ofile,students,title)
 \end{tikzpicture}
 \end{document}
 ]])
+end
+
+function help()
+   print(
+      [[
+Options:
+
+  -i <file>   Sets sociogram file
+  -f <file>   Sets sociogram file
+  -o <file>   Sets output file
+  -t <title>  Sets title
+  -c          Create sociogram file
+  -n          Output dot file with negative edges
+  -p          Output dot file with positive edges
+  -a          Output dot file with all edges
+  -g          Output TeX file with graph of number of edges
+	  ]])
 end
 
 init()
