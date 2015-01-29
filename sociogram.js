@@ -84,8 +84,8 @@ function sociogramFromText() {
     return parseSociogram(tbox.value);
 }
 
-var reader = new FileReader();
 fileInput.innerHTML = fileInput.innerHTML;
+var reader = new FileReader();
 var upload = document.querySelector('#fileUpload');
 
 var fileText;
@@ -135,8 +135,19 @@ btn.onclick = function(e) {
     return false;
 }
 
+function sociogramToString(s) {
+    var ss = [];
+    s.forEach(function(v) {
+	ss.push([v.name,v.positives.join(','),v.negatives.join(',')]);
+    });
+    var sss = [];
+    ss.forEach(function(v) {
+	sss.push(v.join(';'));
+    });
+    return sss.join("\n");
+}
+
 function generateSociogram() {
-    
     var positive = document.querySelector('#positive').checked;
     var negative = document.querySelector('#negative').checked;
     var title = document.querySelector('#title').value;
@@ -156,6 +167,9 @@ function generateSociogram() {
 	sociogram = sociogramFromFile();
     }
 
+    var tbox = document.querySelector('#text');
+    tbox.value = sociogramToString(sociogram);
+    
     n = sociogram.length;
     j = n;
     
