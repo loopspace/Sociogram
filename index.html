@@ -3,12 +3,24 @@
     <title>
       Sociogram
     </title>
+    <script type="text/javascript" src="cviz.js"></script>
   </head>
   <body>
     <p>
       <form id="form">
-	<label for="title" style="padding-right: 1ex; font-weight: bold;">Title:</label><input type="text" id="title" name="title">
-	<table id="table">
+	<label for="title" style="padding-right: 1ex; font-weight:
+	bold;">Title:</label><input type="text" id="title"
+				    name="title">
+	<div>
+	<fieldset style="display: inline-block; margin: 15px;">
+	<legend>Input method</legend>
+
+	<label><input type="radio" name="input" value="form">Form</label><br>
+	<label><input type="radio" name="input" value="text">Text</label><br>
+	<label><input type="radio" name="input" value="file">File</label>
+	</fieldset>
+	</div>
+	<table id="formInput">
 	  <thead>
 	  <tr>
 	    <th>
@@ -28,21 +40,6 @@
 		<button name="add" id="add">+</button>
 	      </td>
 	    </tr>
-	    <tr>
-	      <td>
-		<input type="checkbox" name="positive" id="positive">Positive
-	      </td>
-	    </tr>
-	    <tr>
-	      <td>
-		<input type="checkbox" name="negative" id="negative">Negative
-	      </td>
-	    </tr>
-	    <tr>
-	      <td>
-		<button name="generate" id="generate">Generate</button>
-	      </td>
-	    </tr>
 	  </tfoot>
 	  <tbody id="list">
 	  <tr>
@@ -58,7 +55,37 @@
 	  </tr>
 	  </tbody>
 	</table>
+	<div id = "textInput">
+	  Enter the data so that each line has the following format:<br>
+	  <code>
+	    Name;First Positive,Second Positive;First Negative,Second
+	    Negative,Third Negative
+	  </code><br>
+	  Spaces either side of the <code>;</code> and <code>,</code>
+	  are ignored.<br>
+	<textarea id="text" style="width: 100ex; height:
+				   5em;"></textarea>
+	</div>
+	<div id="fileInput">
+	  Select a file to upload.
+	  Each line of the file should be in the following format:<br>
+	  <code>
+	    Name;First Positive,Second Positive;First Negative,Second
+	    Negative,Third Negative
+	  </code><br>
+	  Spaces either side of the <code>;</code> and <code>,</code>
+	  are ignored.<br>
+	  <input type="file" id="fileUpload">
+	</div>
+	<div>
+	  Select what to show on the graph:<br> 
+	  <input type="checkbox" name="positive" id="positive">Positive<br>
+	  <input type="checkbox" name="negative" id="negative">Negative<br>
+	  <button name="generate" id="generate">Generate the Graph</button>
+	</div>
       </form>
+    </p>
+    <p id="output">
     </p>
   </body>
   <script type="text/javascript" src="sociogram.js"></script>
