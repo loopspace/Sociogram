@@ -6,10 +6,30 @@
     <script type="text/javascript" src="cviz.js"></script>
   </head>
   <body>
+    <h1>Sociogram Graph Generator</h1>
+    <p>
+      This webpage allows you to create a graphical representation of
+      a sociogram.  You can provide the data by inputting it item by
+      item in the
+      form, uploading a file, or entering it all in one in a text box.
+      Once the graph is generated, you can download it as an SVG and
+      you can download the data in a suitable format for later
+      uploading.
+    </p>
+    <p>
+      Note that no data is sent over the network.  The processing of the
+      data takes place in the browser on your machine.  You can verify
+      this by using this page with your computer detached from your network.  
+    </p>
+    <p>
+      The graph generation code is done
+      by <a href="https://github.com/mdaines/viz.js/">this javascript
+      port</a> of <a href="http://www.graphviz.org/">Graphviz</a>.
+    </p>
     <p>
       <form id="form">
 	<label for="title" style="padding-right: 1ex; font-weight:
-	bold;">Title:</label><input type="text" id="title"
+	bold;">Title of Sociogram:</label><input type="text" id="title"
 				    name="title">
 	<div>
 	<fieldset style="display: inline-block; margin: 15px;">
@@ -81,7 +101,9 @@
 	  Select what to show on the graph:<br> 
 	  <input type="checkbox" name="positive" id="positive">Positive<br>
 	  <input type="checkbox" name="negative" id="negative">Negative<br>
-	  <button name="generate" id="generate">Generate the Graph</button>
+	  <button name="generate" id="generate">Generate the Graph</button><br>
+	  <a href="" id="gdownload" style="display: none">Download the Graph</a><br>
+	  <a href="" id="tdownload" style="display: none">Download the Data</a><br>
 	</div>
       </form>
     </p>

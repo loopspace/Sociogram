@@ -131,7 +131,7 @@ function parseSociogram(txt) {
 
 btn = document.querySelector('#generate');
 btn.onclick = function(e) {
-    setTimeout(generateSociogram,100);
+    setTimeout(displaySociogram,100);
     return false;
 }
 
@@ -147,14 +147,7 @@ function sociogramToString(s) {
     return sss.join("\n");
 }
 
-function generateSociogram() {
-    var positive = document.querySelector('#positive').checked;
-    var negative = document.querySelector('#negative').checked;
-    var title = document.querySelector('#title').value;
-    var cell;
-    var i,j;
-    var positives;
-    var negatives;
+function fetchSociogramData() {
     var sociogram;
 
     var input = document.querySelector('input[name="input"]:checked').value;
@@ -166,9 +159,27 @@ function generateSociogram() {
     } else if (input == "file") {
 	sociogram = sociogramFromFile();
     }
-
+    var txt = sociogramToString(sociogram);
     var tbox = document.querySelector('#text');
-    tbox.value = sociogramToString(sociogram);
+    tbox.value = txt;
+    var blob = new Blob([txt], {'type':'text/plain'});
+    var a = document.querySelector('#tdownload');
+    a.href = window.URL.createObjectURL(blob);
+    a.download = "sociogram.txt";
+    a.style.display = 'inline';
+
+    return sociogram;
+}
+
+function generateSociogram () {
+    var positive = document.querySelector('#positive').checked;
+    var negative = document.querySelector('#negative').checked;
+    var title = document.querySelector('#title').value;
+    var cell;
+    var i,j;
+    var positives;
+    var negatives;
+    var sociogram = fetchSociogramData();
     
     n = sociogram.length;
     j = n;
@@ -266,7 +277,39 @@ function generateSociogram() {
     dot += '} ';
     
     svg = Viz(dot, "svg");
+    return svg;
+}
+
+function displaySociogram() {
+    var svg = generateSociogram();
     var out = document.querySelector("#output");
     out.innerHTML = svg;
-    return false;
+    var blob = new Blob([svg], {'type':'text/svg'});
+    var a = document.querySelector('#gdownload');
+    a.href = window.URL.createObjectURL(blob);
+    a.download = "sociogram.svg";
+    a.style.display = 'inline';
 }
+
+function downloadSociogram() {
+    var svg = generateSociogram();
+    download("sociogram.svg",svg,"text/svg");
+}
+
+function odownload(filename, text) {
+    var pom = document.createElement('a');
+    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    pom.setAttribute('download', filename);
+    pom.click();
+    console.log(text);
+}
+
+
+function download(filename,content, contentType)
+{
+    if(!contentType) contentType = 'application/octet-stream';
+        var a = document.createElement('a');
+    a.click();
+    console.log(filename);
+}
+
