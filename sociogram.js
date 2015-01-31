@@ -16,6 +16,17 @@ btn.onclick = function(e) {
     return false;
 }
 
+
+var colsels = ['p', 'n', 'nd', 'ndbg'];
+colsels.forEach(function(v) {
+    var cs = document.querySelector('#' + v + 'colour');
+    var csd = document.querySelector('#' + v + 'colourdemo');
+    csd.style.backgroundColor = cs.options[cs.selectedIndex].value;
+    cs.onchange = function (e) {
+	csd.style.backgroundColor = e.target.options[e.target.selectedIndex].value;
+    };
+});
+
 radio = document.getElementsByName('input');
 
 var formInput = document.querySelector('#formInput');
@@ -174,6 +185,13 @@ function fetchSociogramData() {
 function generateSociogram () {
     var positive = document.querySelector('#positive').checked;
     var negative = document.querySelector('#negative').checked;
+    var pcolsel = document.querySelector('#pcolour');
+    var ncolsel = document.querySelector('#ncolour');
+    var ndcolsel = document.querySelector('#ndcolour');
+    var ndbgcolsel = document.querySelector('#ndbgcolour');
+    var nodeshsel = document.querySelector('#nodeshape');
+    var ndedcolsel = document.querySelector('#nodeedge');
+    
     var title = document.querySelector('#title').value;
     var cell;
     var i,j;
@@ -223,8 +241,16 @@ function generateSociogram () {
 	    negatives[i][sociogram[u]] = true;
 	});
     });
-
-    var dot = 'strict digraph Class { splines=true; overlap=orthoyx; label="' + title + '"; labeloc=b; labeljust=center; fontsize=30; { node [style=filled]; ';
+    var style = 'style="';
+    if (document.querySelector('#filled').checked) {
+	style += 'filled,';
+    }
+    if (document.querySelector('#rounded').checked) {
+	style += 'rounded,';
+    }
+    style += ndedcolsel.options[ndedcolsel.selectedIndex].value;
+    style += '",';
+    var dot = 'strict digraph Class { splines=true; overlap=orthoyx; label="' + title + '"; labeloc=b; labeljust=center; fontsize=30; colorscheme="svg"; { node [' + style + 'shape=' + nodeshsel.options[nodeshsel.selectedIndex].value + ',color=' + ndcolsel.options[ndcolsel.selectedIndex].value + ',fillcolor=' + ndbgcolsel.options[ndbgcolsel.selectedIndex].value + ']; ';
 
     for (i=0; i<n; i++) {
 	dot += 'STUDENT' + i + ' [label="' + sociogram[i].name + '"]; ';
@@ -233,7 +259,7 @@ function generateSociogram () {
     dot += '} ';
 
     if (positive) {
-	dot += '{ edge [color="blue"]; ';
+	dot += '{ edge [color="' + pcolsel.options[pcolsel.selectedIndex].value + '"]; ';
 	dot += '{ edge [dir="both"]; ';
 	for (i=0; i<n; i++) {
 	    for (j=i; j<n; j++) {
@@ -254,7 +280,7 @@ function generateSociogram () {
     }
     
     if (negative) {
-	dot += '{ edge [color="red"]; ';
+	dot += '{ edge [color="' + ncolsel.options[ncolsel.selectedIndex].value + '"]; ';
 	dot += '{ edge [dir="both"]; ';
 	for (i=0; i<n; i++) {
 	    for (j=i; j<n; j++) {
