@@ -833,7 +833,14 @@
 	</div>
 	<div>
 	  <h3>Graph Generation</h3>
-	  Select what to show on the graph:<br> 
+	  Select what to show on the graph:<br>
+	  <label for="engine">Graphviz engine:</label>
+	  <select name="engine" id="engine">
+	    <option value="dot">dot</option>
+	    <option value="circo">circo</option>
+	    <option value="neato">neato</option>
+	    <option value="dot">twopi</option>
+	  </select><br>
 	  <input type="checkbox" name="positive" id="positive">Positive<br>
 	  <input type="checkbox" name="negative" id="negative">Negative<br>
 	  <button name="generate" id="generate">Generate the Graph</button><br>

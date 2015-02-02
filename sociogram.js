@@ -112,6 +112,10 @@ function sociogramFromFile() {
 }
 
 function parseSociogram(txt) {
+    if (typeof txt === 'undefined' || txt == '') {
+	alert("No data specified; either upload a file or enter some data");
+	return [];
+    };
     var lines = txt.split("\n");
     var sociogram = [];
 
@@ -176,8 +180,10 @@ function fetchSociogramData() {
     } else if (input == "file") {
 	sociogram = sociogramFromFile();
     }
-
     var n = sociogram.length;
+    if (n == 0) {
+	return;
+    }
     var j = n;
     
     for (i = 0; i<n; i++) {
@@ -232,6 +238,9 @@ function generateSociogram () {
     var negatives;
     var sociogram = fetchSociogramData();
     n = sociogram.length;
+    if (n == 0) {
+	return;
+    }
     
     positives = [];
     negatives = [];
@@ -308,13 +317,17 @@ function generateSociogram () {
     }
 
     dot += '} ';
-    
-    svg = Viz(dot, "svg");
+    var esel = document.querySelector('#engine');
+    var engine = esel.options[esel.selectedIndex].value;
+    svg = Viz(dot, "svg", engine);
     return svg;
 }
 
 function displaySociogram() {
     var svg = generateSociogram();
+    if (typeof svg === 'undefined') {
+	return;
+    }
     var out = document.querySelector("#output");
     out.innerHTML = svg;
     var blob = new Blob([svg], {'type':'text/svg'});
@@ -343,6 +356,9 @@ function displaySociogram() {
 
 function generateChart() {
     var sociogram = fetchSociogramData();
+    if (sociogram.length == 0) {
+	return;
+    }
     var p,n,mp,mn,svg;
     var scale = 50;
     var ptradius = 5;
