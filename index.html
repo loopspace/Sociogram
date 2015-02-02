@@ -45,7 +45,8 @@
 	<label for="title" style="padding-right: 1ex; font-weight:
 	bold;">Title of Sociogram:</label><input type="text" id="title"
 				    name="title"><br>
-	<fieldset style="display: inline-block; margin: 15px;">
+	<fieldset style="display: inline-block; margin: 15px;
+	border-radius: 5px;">
 	<legend>Input method</legend>
 
 	<label><input type="radio" name="input" value="form">Form</label><br>
@@ -97,7 +98,8 @@
 	  Spaces either side of the <code>;</code> and <code>,</code>
 	  are ignored.<br>
 	<textarea id="text" style="width: 100ex; height:
-				   10em; margin: 3ex; padding: 5px;"></textarea>
+				   10em; margin: 3ex; padding: 5px;
+				   border-radius: 5px;"></textarea>
 	</div>
 	<div id="fileInput">
 	  Select a file to upload.
@@ -835,6 +837,9 @@
 	  <input type="checkbox" name="positive" id="positive">Positive<br>
 	  <input type="checkbox" name="negative" id="negative">Negative<br>
 	  <button name="generate" id="generate">Generate the Graph</button><br>
+	  <button name="gchart" id="gchart">Generate the
+	    Chart</button><br>
+	  <label for="filename">Filename prefix: </label><input type="text" id="filename" name="filename" value="sociogram"><br>
 	  <a href="" id="gdownload" style="display: none">Download the Graph</a><br>
 	  <a href="" id="tdownload" style="display: none">Download the Data</a><br>
 	</div>

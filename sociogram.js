@@ -123,12 +123,12 @@ function parseSociogram(txt) {
 	    var entry = [];
 	    entry.name = e[0];
 	    sociogram[e[0]] = i;
-	    if (e[1] != '') {
+	    if (typeof e[1] !== 'undefined' && e[1] != '') {
 		entry.positives = e[1].split(re);
 	    } else {
 		entry.positives = [];
 	    }
-	    if (e[2] != '') {
+	    if (typeof e[2] !== 'undefined' && e[2] != '') {
 		entry.negatives = e[2].split(re);
 	    } else {
 		entry.negatives = [];
@@ -143,6 +143,12 @@ function parseSociogram(txt) {
 btn = document.querySelector('#generate');
 btn.onclick = function(e) {
     setTimeout(displaySociogram,100);
+    return false;
+}
+
+btn = document.querySelector('#gchart');
+btn.onclick = function(e) {
+    setTimeout(generateChart,100);
     return false;
 }
 
@@ -170,6 +176,33 @@ function fetchSociogramData() {
     } else if (input == "file") {
 	sociogram = sociogramFromFile();
     }
+
+    var n = sociogram.length;
+    var j = n;
+    
+    for (i = 0; i<n; i++) {
+	sociogram[i].positives.forEach(function(v) {
+	    if (typeof sociogram[v] === "undefined") {
+		sociogram[j] = [];
+		sociogram[j].name = v;
+		sociogram[v] = j;
+		sociogram[j].positives = [];
+		sociogram[j].negatives = [];
+		j++;
+	    }
+	});
+	sociogram[i].negatives.forEach(function(v) {
+	    if (typeof sociogram[v] === "undefined") {
+		sociogram[j] = [];
+		sociogram[j].name = v;
+		sociogram[v] = j;
+		sociogram[j].positives = [];
+		sociogram[j].negatives = [];
+		j++;
+	    }
+	});
+    }
+
     var txt = sociogramToString(sociogram);
     var tbox = document.querySelector('#text');
     tbox.value = txt;
@@ -198,33 +231,7 @@ function generateSociogram () {
     var positives;
     var negatives;
     var sociogram = fetchSociogramData();
-    
     n = sociogram.length;
-    j = n;
-    
-    for (i = 0; i<n; i++) {
-	sociogram[i].positives.forEach(function(v) {
-	    if (typeof sociogram[v] === "undefined") {
-		sociogram[j] = [];
-		sociogram[j].name = v;
-		sociogram[v] = j;
-		sociogram[j].positives = [];
-		sociogram[j].negatives = [];
-		j++;
-	    }
-	});
-	sociogram[i].negatives.forEach(function(v) {
-	    if (typeof sociogram[v] === "undefined") {
-		sociogram[j] = [];
-		sociogram[j].name = v;
-		sociogram[v] = j;
-		sociogram[j].positives = [];
-		sociogram[j].negatives = [];
-		j++;
-	    }
-	});
-    }
-    n = j;
     
     positives = [];
     negatives = [];
@@ -313,29 +320,203 @@ function displaySociogram() {
     var blob = new Blob([svg], {'type':'text/svg'});
     var a = document.querySelector('#gdownload');
     a.href = window.URL.createObjectURL(blob);
-    a.download = "sociogram.svg";
+    var fname = document.querySelector('#filename');
+    var filename;
+    if (fname.value == '') {
+	filename = 'sociogram';
+    } else {
+	filename = fname.value;
+    }
+    var positive = document.querySelector('#positive').checked;
+    var negative = document.querySelector('#negative').checked;
+    if (positive && negative) {
+	a.download = filename + "All.svg";
+    } else if (positive) {
+	a.download = filename + "Positive.svg";
+    } else {
+	a.download = filename + "Negative.svg";
+    }
     a.style.display = 'inline';
-}
-
-function downloadSociogram() {
-    var svg = generateSociogram();
-    download("sociogram.svg",svg,"text/svg");
-}
-
-function odownload(filename, text) {
-    var pom = document.createElement('a');
-    pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-    pom.setAttribute('download', filename);
-    pom.click();
-    console.log(text);
+    a.innerHTML = 'Download the Graph';
 }
 
 
-function download(filename,content, contentType)
-{
-    if(!contentType) contentType = 'application/octet-stream';
-        var a = document.createElement('a');
-    a.click();
-    console.log(filename);
+function generateChart() {
+    var sociogram = fetchSociogramData();
+    var p,n,mp,mn,svg;
+    var scale = 50;
+    var ptradius = 5;
+    var xoffset = 1.25;
+    var yoffset = 1.25;
+    mp = 0;
+    mn = 0;
+    var grid = [];
+    sociogram.forEach(function(v) {
+	v.ipositives = 0;
+	v.inegatives = 0;
+    });
+    sociogram.forEach(function(v,i) {
+	v.positives.forEach(function(u) {
+	    sociogram[sociogram[u]].ipositives++;
+	});
+	v.negatives.forEach(function(u) {
+	    sociogram[sociogram[u]].inegatives++;
+	});
+    });
+    sociogram.forEach(function(v,i) {
+	p = v.ipositives;
+	n = v.inegatives;
+	if (typeof grid[p + ',' + n] === 'undefined') {
+	    grid[p + ',' + n] = [];
+	    grid[p + ',' + n].x = p;
+	    grid[p + ',' + n].y = n;
+	}
+	grid[p + ',' + n].push(pad(i+1,2));
+	mp = Math.max(mp,p);
+	mn = Math.max(mn,n);
+    });
+    var width = (mp + 3) * scale + 300;
+    var height = (Math.max(mn + 2,sociogram.length/2) + 1) * scale;
+    var transformX = function(x) {
+	return (x + xoffset)*scale;
+    };
+    var transformDX = function(x) {
+	return x*scale;
+    };
+    var transformY = function (y) {
+	return height - (y + yoffset)*scale;
+    };
+    var transformDY = function (y) {
+	return - y*scale;
+    };
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute('style', 'border: 1px solid black');
+    svg.setAttribute('width', width);
+    svg.setAttribute('height', height);
+    svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xlink", "http://www.w3.org/1999/xlink");
+    svg.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.w3.org/2000/svg");
+    var arrow = document.createElementNS("http://www.w3.org/2000/svg",'marker');
+    arrow.setAttribute('id','triangle');
+    arrow.setAttribute('viewBox',"0 0 10 10");
+    arrow.setAttribute('refX',"0");
+    arrow.setAttribute('refY',"5");
+    arrow.setAttribute('markerUnits',"strokeWidth");
+    arrow.setAttribute('markerWidth',"20");
+    arrow.setAttribute('markerHeight',"15");
+    arrow.setAttribute('orient',"auto");
+    var apath = document.createElementNS("http://www.w3.org/2000/svg",'path');
+    apath.setAttribute('d',"M 0 0 L 10 5 L 0 10 z");
+    arrow.appendChild(apath);
+    svg.appendChild(arrow);
+/*
+    var gs = document.createElementNS("http://www.w3.org/2000/svg",'g');
+    gs.setAttribute('transform','scale(1,-1) translate(0,-' + height + ') scale(' + scale + ') translate(' + xoffset + ',' + yoffset + ')');
+    svg.appendChild(gs);
+*/
+    var xaxis = document.createElementNS("http://www.w3.org/2000/svg",'path');
+    xaxis.setAttribute('d','M ' + transformX(-1) + ' ' + transformY(0) + ' L ' + transformX(mp +1) + ' ' + transformY(0));
+    xaxis.setAttribute('stroke','black');
+    xaxis.setAttribute('stroke-width',1);
+    xaxis.setAttribute('marker-end','url(#triangle)');
+    svg.appendChild(xaxis);
+    var yaxis = document.createElementNS("http://www.w3.org/2000/svg",'path');
+    yaxis.setAttribute('d','M ' + transformX(0) + ' ' + transformY(-1) + ' L ' + transformX(0) + ' ' + transformY(mn +1));
+    yaxis.setAttribute('stroke','black');
+    yaxis.setAttribute('stroke-width',1);
+    yaxis.setAttribute('marker-end','url(#triangle)');
+    svg.appendChild(yaxis);
+    var notch,tick,tlbl,i;
+    for ( i=1;i<=mp;i++) {
+	notch = document.createElementNS("http://www.w3.org/2000/svg",'path');
+	notch.setAttribute('d','M ' + transformX(i) + ' ' + transformY(0) + ' l 0 ' +  transformDY(-.3));
+	notch.setAttribute('stroke','black');
+	notch.setAttribute('stroke-width', 1);
+	svg.appendChild(notch);
+	tick = document.createElementNS("http://www.w3.org/2000/svg",'text');
+	tick.setAttribute('x',transformX(i));
+	tick.setAttribute('y',transformY(-.35));
+	tick.setAttribute('text-anchor','middle');
+	tick.setAttribute('style','dominant-baseline: hanging');
+	var tlbl = document.createTextNode(i);
+	tick.appendChild(tlbl);
+	svg.appendChild(tick);
+    }
+    for ( i=1;i<=mn;i++) {
+	notch = document.createElementNS("http://www.w3.org/2000/svg",'path');
+	notch.setAttribute('d','M ' + transformX(0) + ' ' + transformY(i) + ' l ' +  transformDX(-.3) + ' 0');
+	notch.setAttribute('stroke','black');
+	notch.setAttribute('stroke-width', 1);
+	svg.appendChild(notch);
+	tick = document.createElementNS("http://www.w3.org/2000/svg",'text');
+	tick.setAttribute('x',transformX(-.35));
+	tick.setAttribute('y',transformY(i));
+	tick.setAttribute('text-anchor','end');
+	tick.setAttribute('style','dominant-baseline: middle');
+	var tlbl = document.createTextNode(i);
+	tick.appendChild(tlbl);
+	svg.appendChild(tick);
+    }
+    Object.keys(grid).forEach(function(v) {
+	var circle = document.createElementNS("http://www.w3.org/2000/svg",'circle');
+	circle.setAttribute('cx',transformX(grid[v].x));
+	circle.setAttribute('cy',transformY(grid[v].y));
+	circle.setAttribute('r',ptradius);
+	circle.setAttribute('fill','black');
+	svg.appendChild(circle);
+	var pin = document.createElementNS("http://www.w3.org/2000/svg",'path');
+	pin.setAttribute('d','M ' + transformX(grid[v].x) + ' ' + transformY(grid[v].y) + ' l ' + transformDX(.3) + ' ' +  transformDY(.2));
+	pin.setAttribute('stroke','black');
+	pin.setAttribute('stroke-width', 1);
+	svg.appendChild(pin);
+	var txt = document.createElementNS("http://www.w3.org/2000/svg",'text');
+	txt.setAttribute('x',transformX(grid[v].x + .3));
+	txt.setAttribute('y',transformY(grid[v].y + .2));
+//	txt.setAttribute('font-size',10);
+	txt.setAttribute('text-anchor','start');
+	var label = document.createTextNode(grid[v].join(', '));
+	txt.appendChild(label);
+	svg.appendChild(txt);
+    });
+    sociogram.forEach(function(v,i) {
+	var txt = document.createElementNS("http://www.w3.org/2000/svg",'text');
+	txt.setAttribute('x',transformX(mp + 3));
+	txt.setAttribute('y',transformY((i-1)/2));
+//	txt.setAttribute('font-size',10);
+	txt.setAttribute('text-anchor','start');
+	var label = document.createTextNode(pad(i+1,2) + ' ' + v.name);
+	txt.appendChild(label);
+	svg.appendChild(txt);
+	
+    });
+    var out = document.querySelector("#output");
+    out.innerHTML = '';
+    out.appendChild(svg);
+    var svgtxt = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>' + "\n" + '<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">' + "\n" + out.innerHTML;
+
+    var blob = new Blob([svgtxt], {'type':'text/svg'});
+    var a = document.querySelector('#gdownload');
+    a.href = window.URL.createObjectURL(blob);
+    var fname = document.querySelector('#filename');
+    var filename;
+    if (fname.value == '') {
+	filename = 'sociogram';
+    } else {
+	filename = fname.value;
+    }
+    a.download = filename + "Chart.svg";
+    a.style.display = 'inline';
+    a.innerHTML = 'Download the Chart';
+}
+
+function pad(n,l) {
+    var ln = Math.floor(Math.log10(Math.abs(n)))+1; // length of n
+    var z;
+    if (ln < l) {
+	z = new Array(l - ln + 1).join('0');
+    } else {
+	z = '';
+    }
+    z += n.toString();
+    return z;
 }
 
