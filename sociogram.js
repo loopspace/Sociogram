@@ -27,6 +27,31 @@ colsels.forEach(function(v) {
     };
 });
 
+var fname = document.querySelector('#filename');
+fname.onchange = function(e) {
+    var a = document.querySelector('#tdownload');
+    var fname = document.querySelector('#filename');
+    var filename;
+    if (fname.value == '') {
+	filename = 'sociogram';
+    } else {
+	filename = fname.value;
+    }
+    a.download = filename + ".txt";
+
+    a = document.querySelector('#gdownload');
+    var positive = document.querySelector('#positive').checked;
+    var negative = document.querySelector('#negative').checked;
+    if (positive && negative) {
+	a.download = filename + "All.svg";
+    } else if (positive) {
+	a.download = filename + "Positive.svg";
+    } else {
+	a.download = filename + "Negative.svg";
+    }
+
+};
+
 radio = document.getElementsByName('input');
 
 var formInput = document.querySelector('#formInput');
@@ -215,7 +240,14 @@ function fetchSociogramData() {
     var blob = new Blob([txt], {'type':'text/plain'});
     var a = document.querySelector('#tdownload');
     a.href = window.URL.createObjectURL(blob);
-    a.download = "sociogram.txt";
+    var fname = document.querySelector('#filename');
+    var filename;
+    if (fname.value == '') {
+	filename = 'sociogram';
+    } else {
+	filename = fname.value;
+    }
+    a.download = filename + ".txt";
     a.style.display = 'inline';
 
     return sociogram;
