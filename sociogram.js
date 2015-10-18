@@ -141,7 +141,7 @@ function parseSociogram(txt) {
 	alert("No data specified; either upload a file or enter some data");
 	return [];
     };
-    var lines = txt.split("\n");
+    var lines = txt.match(/[^\r\n]+/g);
     var sociogram = [];
 
     lines.forEach(function(v,i) {
