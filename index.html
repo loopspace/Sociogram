@@ -32,6 +32,14 @@
       uploading.
     </p>
     <p>
+      There are three types of graphs: one showing just the positive
+      relationships, one just the negatives, and one showing both.
+    </p>
+    <p>
+      You can also plot the data on a chart showing the number of
+      positive relationships on the x-axis and negative on the y-axis.
+    </p>
+    <p>
       Note that no data is sent over the network.  The processing of the
       data takes place in the browser on your machine.  You can verify
       this by using this page with your computer detached from your network.  
@@ -848,7 +856,9 @@
 	  <input type="checkbox" name="negative"
 		 id="negative">Negative<br>
 	  <label for="groups">Groups: </label><input type="text" id="groups"
-				   name="groups">
+				   name="groups"><br>
+	  <input type="checkbox" name="gstrong"
+		 id="gstrong">Allow disjointed groups<br>
 	  <div class="buttons">
 	  <a href="" id="generate" class="imgDownload">Generate the Graph</a>
 	  <a href="" id="gchart" class="imgDownload">Generate the
@@ -867,6 +877,8 @@
 	</div>
       </form>
     </p>
+    <div id="progress">
+    </div>
     <p id="output">
     </p>
   </body>

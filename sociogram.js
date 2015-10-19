@@ -139,8 +139,10 @@ function Sociogram() {
     var vertices = [];
     var labels = {};
     var edges = [];
+    var gedges; // used for making the groups
     var size = 0;
     var dom = {};
+    var mgroups;
 
     this.hasData = function() {
 	return size !== 0;
@@ -611,6 +613,10 @@ function Sociogram() {
 	    groups.push(last);
 	    gsize += last;
 	});
+	while (gsize > size) {
+	    last = groups.pop();
+	    gsize -= last;
+	}
 
 	while (gsize < size) {
 	    if (gsize + last < size) {
@@ -621,6 +627,7 @@ function Sociogram() {
 		gsize = size;
 	    }
 	}
+
 	var partition = [];
 	var i,j;
 	for (i = 0; i < groups.length; i++) {
@@ -629,8 +636,22 @@ function Sociogram() {
 		partition[i][j] = -1;
 	    }
 	}
+	// Initialise:
+	gedges = [];
+	mgroups = [];
+	for (i = 0; i < size; i++) {
+	    gedges[i] = [];
+	    for (j = 0; j < size; j++) {
+		if ((edges[i][j] == -1) || (edges[j][i] == -1)) {
+		    gedges[i][j] = -1;
+		} else {
+		    gedges[i][j] = edges[i][j];
+		}
+	    }
+	}
+	var gstrong = document.querySelector('#gstrong').checked;
 	self.startQueue();
-	self.doPartition(partition,0,0,0,true,out);
+	self.doPartition(partition,0,0,0,gstrong,out);
     }
 
     /*
@@ -659,14 +680,31 @@ function Sociogram() {
 	if (r == size) {
 	    // Backtrack to previous position
 	    if (t == 0) {
+		// We're at the start of a group so need to backtrack into the previous group
 		if (s == 0) {
+		    // We've backtracked all the way to the start, so we're done.
+		    self.stopQueue();
 		    return;
 		} else {
-		    self.addToQueue([p,0,s-1,p[s].length-1,b,o]);
+		    // Previous group
+		    s = s - 1;
+		    // Last position thereof
+		    t = p[s].length - 1;
+		    // Current item at that position, add 1
+		    r = p[s][t] + 1;
+		    self.addToQueue([p,r,s,t,b,o]);
 		}
 	    } else {
-		self.addToQueue([p,0,s,t-1,b,o]);
+		t = t - 1;
+		r = p[s][t] + 1; 
+		self.addToQueue([p,r,s,t,b,o]);
 	    }
+	    return;
+	}
+	// First step should be to see if adding this element would produce a pattern that we've already seen.
+	if (mgroups[self.namePartition(p,r,s,t,'Checking')]) {
+	    // Yes, we have so skip
+	    self.addToQueue([p,r+1,s,t,b,o]);
 	    return;
 	}
 	var j,k,add;
@@ -691,29 +729,28 @@ function Sociogram() {
 	    }
 	}
 
-	if (add) {
-	    // Not yet in a group, so look for arrows.
+	if (add && (t > 0)) {
+	    // Not yet in a group, so look for arrows to existing elements.
 	    
 	    // If there's no negatives, do we add or not?
 	    add = b
 	    
 	    // Test against the existing elements
 	    for (k = 0; k < t; k++) {
-		// Is there an edge from r to p[s][i]?
-		if (edges[r][p[s][k]] == 1) {
+		// Is there an edge from r to p[s][k]?
+		if (gedges[r][p[s][k]] == 1) {
 		    // There's a positive one, so we'll mark it for adding
 		    add = true;
-		} else if (edges[r][p[s][k]] == -1) {
-		    // There's a negative one, so we'll not add it
+		} else if (gedges[r][p[s][k]] == -1) {
+		    // There's a negative one either to or from, so we'll not add it
 		    add = false;
 		    break;
 		}
 	    }
 	}	
-
 	if (add) {
 	    // Okay, so we're adding.
-	    console.log('Adding ' + r + ' to group ' + s + ' in position ' + t);
+	    mgroups[self.namePartition(p,r,s,t,'Adding')] = true;
 	    p[s][t] = r;
 	    // Now step onwards
 	    if (t == p[s].length - 1) {
@@ -722,19 +759,70 @@ function Sociogram() {
 		    // End of partition
 		    self.displayPartition(p,o);
 		    // backtrack, remove last one and redo with next
-		    self.addToQueue([p,r+1,s,t,true,o]);
+		    self.addToQueue([p,r+1,s,t,b,o]);
 		} else {
 		    // Start again with the next group
-		    self.addToQueue([p,0,s+1,0,true,o]);
+		    self.addToQueue([p,0,s+1,0,b,o]);
 		}
 	    } else {
 		// Not end of group yet
-		self.addToQueue([p,0,s,t+1,true,o]);
+		self.addToQueue([p,0,s,t+1,b,o]);
 	    }
 	} else {
 	    // Not adding, so try the next one
-	    self.addToQueue([p,r+1,s,t,true,o]);
+	    self.addToQueue([p,r+1,s,t,b,o]);
 	}
+    }
+
+    this.namePartition = function(p,r,s,t,m) {
+	var pp = [];
+	var i,j,ss;
+	var ne = 0
+	for (i = 0; i< s; i++) {
+	    pp[i] = [];
+	    for (j= 0; j < p[i].length; j++) {
+		ne++;
+		pp[i][j] = p[i][j];
+	    }
+	}
+	// Would adding r fill our current group?
+	if (t == p[s].length - 1) {
+	    // Yes, so consider it as one of the other groups.
+	    pp[s] = [];
+	    for (i = 0; i < t; i++) {
+		ne++;
+		pp[s][i] = p[s][i];
+	    }
+	    ne++;
+	    pp[s][t] = r;
+	}
+	// Now sort the groups
+	for (i = 0; i < pp.length; i++) {
+	    pp[i].sort(function(a,b) {return a - b});
+	}
+	pp.sort(function(a,b) {return a[0] - b[0]});
+	if (t !== p[s].length - 1) {
+	    // If adding r wouldn't fill our current group then this
+	    // group is different to the others, so we add it on to
+	    // the end.  Since the groups are filled in a fixed order,
+	    // we can't be in the situation where a pattern with only
+	    // full groups matches a pattern with partially filled
+	    // groups.
+	    pp[s] = [];
+	    for (i = 0; i < t; i++) {
+		ne++;
+		pp[s][i] = p[s][i];
+	    }
+	    ne++;
+	    pp[s][t] = r;
+	    pp[s].sort(function(a,b) {return a - b});
+	}
+	ss = [];
+	for (i = 0; i <= s; i++) {
+	    ss.push(pp[i].join(','));
+	}
+	var n = ss.join(';');
+	return ss.join(';');
     }
     
     this.displayPartition = function(p,o) {
@@ -745,16 +833,109 @@ function Sociogram() {
 	    for (j = 0; j < p[i].length; j++) {
 		a.push(vertices[p[i][j]]);
 	    }
-	    s.push(a.join(','));
+	    s.push(a.join(', ') + ': ' + self.scoreGroup(p[i]));
 	}
-	var txt = document.createTextNode(s.join(';'));
+//	var sc = self.scorePartition(p);
+	var txt = document.createTextNode(s.join(';  '));
 	o.appendChild(txt);
 	var br = document.createElement('br');
 	o.appendChild(br);
 
     }
 
+    this.scoreGroup = function(g) {
+	var j,k,l;
+	var inc;
+	var out;
+	var con;
+	var s = 0;
+	inc = [];
+	out = [];
+	con = [];
+	for (j = 0; j < g.length; j++) {
+	    con[j] = 0;
+	}
+	con[0] = 1;
+	    
+	for (j = 0; j < g.length; j++) {
+	    inc[j] = 0;
+	    out[j] = 0;
+	    for (k = 0; k < g.length; k++) {
+		if (con[j] == 1) {
+		    con[k] = Math.max(con[k],edges[g[j]][g[k]],edges[g[k]][g[j]]);
+		}
+		if (edges[g[j]][g[k]] == 1)
+		    out[j] = 1;
+		if (edges[g[k]][g[j]] == 1)
+		    inc[j] = 1;
+	    }
+	}
+	// Does every node have an incoming arrow?
+	if (minArray(inc) == 1)
+	    s += 1;
+	// Does every node have an outgoing arrow?
+	if (minArray(out) == 1)
+	    s += 2;
+	if (minArray(con) == 1)
+	    s += 4;
+	return s;
+
+    }
+    
+    this.scorePartition = function(p) {
+	// Score a partition by scoring its groups
+	// An ideal group is:
+	//  Weakly connected,
+	//  Every node has at least one incoming and one outgoing edge
+	var i,j,k,l;
+	var inc;
+	var out;
+	var s = [];
+	for (i = 0; i < p.length; i++) {
+	    s[i] = 0;
+	    inc = [];
+	    out = [];
+	    con = [];
+	    for (j = 0; j < p[i].length; j++) {
+		con[j] = 0;
+	    }
+	    con[1] = 1;
+	    
+	    for (j = 0; j < p[i].length; j++) {
+		inc[j] = 0;
+		out[j] = 0;
+		for (k = 0; k < p[i].length; k++) {
+		    if (con[j] == 1) {
+			con[k] = Math.max(con[k],edges[j][k],edges[k][j]);
+		    }
+		    if (edges[j][k] == 1)
+			out[j] = 1;
+		    if (edges[k][j] == 1)
+			inc[j] = 1;
+		    if ((out[j] == 1) && (inc[j] == 1))
+			break;
+		}
+	    }
+	    // Does every node have an incoming arrow?
+	    if (minArray(inc) == 1)
+		s[i] += 1;
+	    // Does every node have an outgoing arrow?
+	    if (minArray(out) == 1)
+		s[i] += 2;
+	    if (minArray(con) == 1)
+		s[i] += 4;
+	}
+	return s.join(', ');
+    }
+
     var queue = [];
+    var qTimer;
+    var lead = '';
+    var progress;
+    var ptext;
+    var pnum;
+    var pTimer;
+//    var pBar;
 
     this.addToQueue = function(f) {
 	queue.push(f);
@@ -762,11 +943,33 @@ function Sociogram() {
 
     this.startQueue = function() {
 	queue = [];
+	progress = document.querySelector('#progress');
+	/*
+	pBar = document.createElement('progress');
+	progress.parentNode.insertBefore(pBar, progress.nextSibling);
+	pBar.max=100;
+	pBar.value=0;
+	*/
+	ptext = stringFill3('.&nbsp;&nbsp;',100);
+	pnum = 0;
+	pTimer = window.setInterval(function() {
+	    pnum = (pnum + 1)%3;
+	    progress.innerHTML = stringFill3('&nbsp;',pnum) + ptext;
+	},10);
 	self.doQueue();
     }
 
+    this.stopQueue = function() {
+	if (queue.length > 0 )
+	    alert('Ooops!  Queue stopped early.');
+	//	progress.innerHTML = '';
+	// pBar.parentElement.remove(pBar);
+	clearTimeout(qTimer);
+	clearInterval(pTimer);
+    }
+    
     this.doQueue = function() {
-	window.setTimeout(function() {
+	qTimer = window.setTimeout(function() {
 	    var f;
 	    if (queue.length > 0) {
 		f = queue.shift();
@@ -807,4 +1010,35 @@ function arrayClone( arr ) {
         return arr;
     }
 
+}
+
+function stringFill3(x, n) {
+    var s = '';
+    for (;;) {
+        if (n & 1) s += x;
+        n >>= 1;
+        if (n) x += x;
+        else break;
+    }
+    return s;
+}
+
+function maxArray(a) {
+    var m = a[0];
+    var i;
+    for (i = 1; i < a.length; i++) {
+	if (m < a[i])
+	    m = a[i];
+    }
+    return m;
+}
+
+function minArray(a) {
+    var m = a[0];
+    var i;
+    for (i = 1; i < a.length; i++) {
+	if (m > a[i])
+	    m = a[i];
+    }
+    return m;
 }
