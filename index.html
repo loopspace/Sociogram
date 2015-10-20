@@ -21,23 +21,72 @@
     </style>
   </head>
   <body>
-    <h1>Sociogram Graph Generator</h1>
+    <h1>Sociogram</h1>
     <p>
-      This webpage allows you to create a graphical representation of
-      a sociogram.  You can provide the data by inputting it item by
-      item in the
-      form, uploading a file, or entering it all in one in a text box.
-      Once the graph is generated, you can download it as an SVG and
-      you can download the data in a suitable format for later
-      uploading.
+      This webpage allows you analyse a sociogram.
+      A sociogram consists of a group of items together positive and
+      negative relationships between those items.
+      The various tools provided for analysing a sociogram are:
+      <ul>
+	<li>Graphing the sociogram.
+
+	  <p>
+	    The program produces a variety of types of graph.  The
+	    main choice is what to include: you can include just the
+	    positive relationships, just the negatives, or both.
+	  </p>
+
+	<li>Charting the sociogram.
+
+	  <p>
+	    The chart consists of each item plotted at the position so
+	    that its x-coordinate is the number of (incoming) positive
+	    relationships and y-coordinate the number of (incoming)
+	    negative relationships.
+	  </p>
+
+	<li>Grouping the items.
+
+	  <p>
+	    If you specify group sizes, the program will attempt to
+	    fit the items into those groups.  The resulting groups are
+	    guaranteed to have no negative relationships.
+	  </p>
+
+	  <p>
+	    There are two methods for making the groups.  The stronger
+	    method only adds an item to a group if there is a positive
+	    relationship between an existing item and the new item.  The
+	    weaker method will allow adding an item so long as there are
+	    no negative relationships between it and the existing
+	    items.
+	  </p>
+
+	  <p>
+	    When a grouping is found, it is printed out.  Each group
+	    within that grouping is analysed and the result of that
+	    analysis displayed after the group as a string of three
+	    characters that are zeros or ones.  The first character
+	    answers the question "Does every item have an incoming
+	    positive relationship with another in that group?", the
+	    second is the same but for outgoing, the third is whether
+	    the group is connected (meaning that there is a chain of
+	    relationships between any two items in the group).
+	  </p>
+
+	  <p>
+	    It can take a long time to go through all the possible
+	    groups.  The dots indicate that the program is still
+	    working.  The progress bar indicates the size of the
+	    current attempt at grouping: a full progress bar means
+	    that it has found a full grouping.
+	  </p>
+      </ul>
     </p>
     <p>
-      There are three types of graphs: one showing just the positive
-      relationships, one just the negatives, and one showing both.
-    </p>
-    <p>
-      You can also plot the data on a chart showing the number of
-      positive relationships on the x-axis and negative on the y-axis.
+      You can specify the data via a form, in a text box, or by
+      uploading a file.  You can download the data suitable for 
+      uploading again.  You can also save the generated graphs or charts.
     </p>
     <p>
       Note that no data is sent over the network.  The processing of the

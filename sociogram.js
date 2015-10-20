@@ -833,7 +833,7 @@ function Sociogram() {
 	    for (j = 0; j < p[i].length; j++) {
 		a.push(vertices[p[i][j]]);
 	    }
-	    s.push(a.join(', ') + ': ' + self.scoreGroup(p[i]));
+	    s.push(a.join(', ') + ' (' + self.scoreGroup(p[i]) + ')');
 	}
 //	var sc = self.scorePartition(p);
 	var txt = document.createTextNode(s.join(';  '));
@@ -848,7 +848,7 @@ function Sociogram() {
 	var inc;
 	var out;
 	var con;
-	var s = 0;
+	var s = '';
 	inc = [];
 	out = [];
 	con = [];
@@ -870,6 +870,25 @@ function Sociogram() {
 		    inc[j] = 1;
 	    }
 	}
+	    // Does every node have an incoming arrow?
+	    if (minArray(inc) == 1) {
+		s += '1';
+	    } else {
+		s += '0';
+	    }
+	    // Does every node have an outgoing arrow?
+	    if (minArray(out) == 1) {
+		s += '1';
+	    } else {
+		s += '0';
+	    }
+	    // Is it weakly connected?
+	    if (minArray(con) == 1) {
+		s += '1';
+	    } else {
+		s += '0';
+	    }
+	/*
 	// Does every node have an incoming arrow?
 	if (minArray(inc) == 1)
 	    s += 1;
@@ -878,6 +897,7 @@ function Sociogram() {
 	    s += 2;
 	if (minArray(con) == 1)
 	    s += 4;
+	*/
 	return s;
 
     }
@@ -892,7 +912,7 @@ function Sociogram() {
 	var out;
 	var s = [];
 	for (i = 0; i < p.length; i++) {
-	    s[i] = 0;
+	    s[i] = '';
 	    inc = [];
 	    out = [];
 	    con = [];
@@ -917,13 +937,23 @@ function Sociogram() {
 		}
 	    }
 	    // Does every node have an incoming arrow?
-	    if (minArray(inc) == 1)
-		s[i] += 1;
+	    if (minArray(inc) == 1) {
+		s[i] += '1';
+	    } else {
+		s[i] += '0';
+	    }
 	    // Does every node have an outgoing arrow?
-	    if (minArray(out) == 1)
-		s[i] += 2;
-	    if (minArray(con) == 1)
-		s[i] += 4;
+	    if (minArray(out) == 1) {
+		s[i] += '1';
+	    } else {
+		s[i] += '0';
+	    }
+	    // Is it weakly connected?
+	    if (minArray(con) == 1) {
+		s[i] += '1';
+	    } else {
+		s[i] += '0';
+	    }
 	}
 	return s.join(', ');
     }
@@ -935,7 +965,7 @@ function Sociogram() {
     var ptext;
     var pnum;
     var pTimer;
-//    var pBar;
+    var pBar;
 
     this.addToQueue = function(f) {
 	queue.push(f);
@@ -944,12 +974,12 @@ function Sociogram() {
     this.startQueue = function() {
 	queue = [];
 	progress = document.querySelector('#progress');
-	/*
-	pBar = document.createElement('progress');
-	progress.parentNode.insertBefore(pBar, progress.nextSibling);
-	pBar.max=100;
+	if (typeof(pBar) === 'undefined') {
+	    pBar = document.createElement('progress');
+	    progress.parentNode.insertBefore(pBar, progress.nextSibling);
+	}
+	pBar.max=size;
 	pBar.value=0;
-	*/
 	ptext = stringFill3('.&nbsp;&nbsp;',100);
 	pnum = 0;
 	pTimer = window.setInterval(function() {
@@ -962,18 +992,23 @@ function Sociogram() {
     this.stopQueue = function() {
 	if (queue.length > 0 )
 	    alert('Ooops!  Queue stopped early.');
-	//	progress.innerHTML = '';
-	// pBar.parentElement.remove(pBar);
+	progress.innerHTML = '';
+	pBar.parentElement.remove(pBar);
 	clearTimeout(qTimer);
 	clearInterval(pTimer);
     }
     
     this.doQueue = function() {
 	qTimer = window.setTimeout(function() {
-	    var f;
+	    var f,i,l;
 	    if (queue.length > 0) {
 		f = queue.shift();
+		l = f[3];
 		self.doPartition(f[0],f[1],f[2],f[3],f[4],f[5]);
+		for (i = 0; i<f[2]; i++) {
+		    l += f[0][i].length;
+		}
+		pBar.value = l;
 	    }
 	    self.doQueue();
 	} );
