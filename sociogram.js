@@ -122,7 +122,7 @@ function init() {
     btn = document.querySelector('#groupgen');
     btn.onclick = function(e) {
 	e.preventDefault();
-	sociogram.generateGroups('#output');
+	sociogram.generateGroups(btn,'#output');
 	return false;
     }
 }
@@ -445,8 +445,8 @@ function Sociogram() {
 	}
 	for (i = 0; i< size; i++) {
 	    for (j = 0; j<size; j++) {
-		ipos[i] += Math.max(0,edges[i][j]);
-		ineg[i] -= Math.min(0,edges[i][j]);
+		ipos[i] += Math.max(0,edges[j][i]);
+		ineg[i] -= Math.min(0,edges[j][i]);
 	    }
 	}
 	for (i=0; i < size; i++) {
@@ -594,10 +594,28 @@ function Sociogram() {
 	a.innerHTML = 'Download the Chart';
     }
 
-    this.generateGroups = function(id) {
+    var queue = [];
+    var qTimer;
+    var lead = '';
+    var progress;
+    var ptext;
+    var pnum;
+    var pTimer;
+    var pBar;
+    var gbtn;
+
+    this.generateGroups = function(btn,id) {
+	gbtn = btn;
+	if (queue.length > 0) {
+	    self.stopQueue();
+	    return;
+	}
+	gbtn.innerHTML = 'Stop Groups';
 	self.create();
 	var out = document.querySelector(id);
 	out.innerHTML = '';
+	var list = document.createElement('ol');
+	out.appendChild(list);
 
 	var grps = document.querySelector('#groups').value;
 	if (grps == '') {
@@ -651,7 +669,7 @@ function Sociogram() {
 	}
 	var gstrong = document.querySelector('#gstrong').checked;
 	self.startQueue();
-	self.doPartition(partition,0,0,0,gstrong,out);
+	self.doPartition(partition,0,0,0,gstrong,list);
     }
 
     /*
@@ -826,21 +844,21 @@ function Sociogram() {
     }
     
     this.displayPartition = function(p,o) {
-	var s = [];
-	var a,i,j;
+	var oli = document.createElement('li');
+	var s = document.createElement('ul');
+	var a,i,j,li,txt;
 	for (i = 0; i < p.length; i++) {
 	    a = [];
 	    for (j = 0; j < p[i].length; j++) {
 		a.push(vertices[p[i][j]]);
 	    }
-	    s.push(a.join(', ') + ' (' + self.scoreGroup(p[i]) + ')');
+	    li = document.createElement('li');
+	    txt = document.createTextNode('(' + self.scoreGroup(p[i]) + ') ' + a.join(', '));
+	    li.appendChild(txt);
+	    s.appendChild(li);
 	}
-//	var sc = self.scorePartition(p);
-	var txt = document.createTextNode(s.join(';  '));
-	o.appendChild(txt);
-	var br = document.createElement('br');
-	o.appendChild(br);
-
+	oli.appendChild(s);
+	o.appendChild(oli);
     }
 
     this.scoreGroup = function(g) {
@@ -958,15 +976,6 @@ function Sociogram() {
 	return s.join(', ');
     }
 
-    var queue = [];
-    var qTimer;
-    var lead = '';
-    var progress;
-    var ptext;
-    var pnum;
-    var pTimer;
-    var pBar;
-
     this.addToQueue = function(f) {
 	queue.push(f);
     }
@@ -974,10 +983,8 @@ function Sociogram() {
     this.startQueue = function() {
 	queue = [];
 	progress = document.querySelector('#progress');
-	if (typeof(pBar) === 'undefined') {
-	    pBar = document.createElement('progress');
-	    progress.parentNode.insertBefore(pBar, progress.nextSibling);
-	}
+	pBar = document.createElement('progress');
+	progress.parentNode.insertBefore(pBar, progress.nextSibling);
 	pBar.max=size;
 	pBar.value=0;
 	ptext = stringFill3('.&nbsp;&nbsp;',100);
@@ -992,8 +999,10 @@ function Sociogram() {
     this.stopQueue = function() {
 	if (queue.length > 0 )
 	    alert('Ooops!  Queue stopped early.');
+	queue = [];
+	gbtn.innerHTML = 'Generate the Groups';
 	progress.innerHTML = '';
-	pBar.parentElement.remove(pBar);
+	pBar.parentElement.removeChild(pBar);
 	clearTimeout(qTimer);
 	clearInterval(pTimer);
     }
