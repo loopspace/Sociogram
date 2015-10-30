@@ -603,19 +603,21 @@ function Sociogram() {
     var pTimer;
     var pBar;
     var gbtn;
+    var pScores;
 
     this.generateGroups = function(btn,id) {
 	gbtn = btn;
+	gbtn.innerHTML = 'Stop Groups';
 	if (queue.length > 0) {
 	    self.stopQueue();
 	    return;
 	}
-	gbtn.innerHTML = 'Stop Groups';
 	self.create();
 	var out = document.querySelector(id);
 	out.innerHTML = '';
 	var list = document.createElement('ol');
 	out.appendChild(list);
+	list.className += ' groupList';
 
 	var grps = document.querySelector('#groups').value;
 	if (grps == '') {
@@ -657,6 +659,24 @@ function Sociogram() {
 	// Initialise:
 	gedges = [];
 	mgroups = [];
+	gScores = [];
+	var i,j,k,l;
+	for (i=0; i < groups.length; i++) {
+	    gScores[i] = [];
+	    gScores[i].size = 0;
+	    for (j=0; j < groups.length; j++) {
+		gScores[i][j] = [];
+		gScores[i][j].size = 0;
+		for (k=0; k < groups.length; k++) {
+		    gScores[i][j][k] = [];
+		    gScores[i][j][k].size = 0;
+		    for (l=0; l < groups.length; l++) {
+			gScores[i][j][k][l] = [];
+			gScores[i][j][k][l].size = 0;
+		    }
+		}
+	    }
+	}
 	for (i = 0; i < size; i++) {
 	    gedges[i] = [];
 	    for (j = 0; j < size; j++) {
@@ -847,26 +867,50 @@ function Sociogram() {
 	var oli = document.createElement('li');
 	var s = document.createElement('ul');
 	var a,i,j,li,txt;
+	var sc = [0,0,0,0];
 	for (i = 0; i < p.length; i++) {
 	    a = [];
 	    for (j = 0; j < p[i].length; j++) {
 		a.push(vertices[p[i][j]]);
 	    }
 	    li = document.createElement('li');
-	    txt = document.createTextNode('(' + self.scoreGroup(p[i]) + ') ' + a.join(', '));
+	    sc[self.scoreGroup(p[i],0)]++;
+	    txt = document.createTextNode('(' + self.scoreGroup(p[i],'') + ') ' + a.join(', '));
 	    li.appendChild(txt);
 	    s.appendChild(li);
 	}
+	var pos = 0;
+	for (i = 0; i < sc[0]; i++) {
+	    pos += gScores[i].size;
+	}
+	gScores[sc[0]].size++;
+	for (i = 0; i < sc[1]; i++) {
+	    pos += gScores[sc[0]][i].size;
+	}
+	gScores[sc[0]][sc[1]].size++;
+	for (i = 0; i < sc[2]; i++) {
+	    pos += gScores[sc[0]][sc[1]][i].size;
+	}
+	gScores[sc[0]][sc[1]][sc[2]].size++;
+	for (i = 0; i < sc[3]; i++) {
+	    pos += gScores[sc[0]][sc[1]][sc[2]][i].size;
+	}
+	gScores[sc[0]][sc[1]][sc[2]][sc[3]].size++;
 	oli.appendChild(s);
-	o.appendChild(oli);
+	pos++;
+	var prev = document.querySelectorAll('.groupList > li:nth-child('+pos+')');
+	if (prev.length > 0) {
+	    o.insertBefore(oli,prev[0]);
+	} else {
+	    o.appendChild(oli);
+	}
     }
 
-    this.scoreGroup = function(g) {
+    this.scoreGroup = function(g,s) {
 	var j,k,l;
 	var inc;
 	var out;
 	var con;
-	var s = '';
 	inc = [];
 	out = [];
 	con = [];
@@ -890,21 +934,21 @@ function Sociogram() {
 	}
 	    // Does every node have an incoming arrow?
 	    if (minArray(inc) == 1) {
-		s += '1';
+		s += 1;
 	    } else {
-		s += '0';
+		s += 0;
 	    }
 	    // Does every node have an outgoing arrow?
 	    if (minArray(out) == 1) {
-		s += '1';
+		s += 1;
 	    } else {
-		s += '0';
+		s += 0;
 	    }
 	    // Is it weakly connected?
 	    if (minArray(con) == 1) {
-		s += '1';
+		s += 1;
 	    } else {
-		s += '0';
+		s += 0;
 	    }
 	/*
 	// Does every node have an incoming arrow?
