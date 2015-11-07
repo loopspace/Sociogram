@@ -604,10 +604,11 @@ function Sociogram() {
     var pBar;
     var gbtn;
     var pScores;
+    var sOrder;
+    var rOrder;
 
     this.generateGroups = function(btn,id) {
 	gbtn = btn;
-	gbtn.innerHTML = 'Stop Groups';
 	if (queue.length > 0) {
 	    self.stopQueue();
 	    return;
@@ -624,6 +625,7 @@ function Sociogram() {
 	    alert("No group sizes specified");
 	    return;
 	}
+	gbtn.innerHTML = 'Stop Groups';
 	var re = /\s*[,; ]\s*/;
 	var groups = [];
 	var gsize = 0;
@@ -687,6 +689,39 @@ function Sociogram() {
 		}
 	    }
 	}
+	sOrder = [];
+	for (i=0; i < size; i++) {
+	    sOrder[i] = [];
+	    for (j = 0; j < size; j++) {
+		sOrder[i][j] = j;
+	    }
+	    sOrder[i].sort(function(a,b) {
+		if ((gedges[a][i] !== 0) || (gedges[b][i] !==0) ) {
+		    return gedges[b][i] - gedges[a][i];
+		}
+		return gedges[i][b] - gedges[i][a];
+	    });
+	}
+	sOrder.unshift([]);
+	for (j = 0; j < size; j++) {
+	    sOrder[0][j] = j;
+	}
+	var valency = [];
+	for (i = 0; i < size; i++) {
+	    valency[i] = 0;
+	    for (j = 0; j < size; j++) {
+		if ((gedges[i][j] == 1) || (gedges[j][i] == 1))
+		    valency[i]++;
+	    }
+	}
+	sOrder[0].sort(function(a,b) { return valency[a] - valency[b] });
+	rOrder = [];
+	for (i = 0; i <= size; i++) {
+	    rOrder[i] = [];
+	    for (j = 0; j < size; j++) {
+		rOrder[i][sOrder[i][j]] = j;
+	    }
+	}
 	var gstrong = document.querySelector('#gstrong').checked;
 	self.startQueue();
 	self.doPartition(partition,0,0,0,gstrong,list);
@@ -710,9 +745,6 @@ function Sociogram() {
       If we're at the end of the list of vertices, backtracking means
       going to the previous position in the group, or the previous
       group if we're at the start.
-
-      Backtracking is getting into an infinite loop as it backtracks
-      too far, I think.
      */
     this.doPartition = function(p,r,s,t,b,o) {
 	if (r == size) {
@@ -728,19 +760,33 @@ function Sociogram() {
 		    s = s - 1;
 		    // Last position thereof
 		    t = p[s].length - 1;
-		    // Current item at that position, add 1
-		    r = p[s][t] + 1;
+		    // To find the next item, look at the place of the
+		    // last item in the order given by the penultimate
+		    // item and step further one place
+		    r = rOrder[ p[s][t-1] + 1 ][ p[s][t] ] + 1;
 		    self.addToQueue([p,r,s,t,b,o]);
 		}
 	    } else {
 		t = t - 1;
-		r = p[s][t] + 1; 
+		if (t == 0) {
+		    r = p[s][t] + 1;
+		} else {
+		    r = rOrder[ p[s][t-1] + 1 ][ p[s][t] ] + 1;
+		}
 		self.addToQueue([p,r,s,t,b,o]);
 	    }
 	    return;
 	}
-	// First step should be to see if adding this element would produce a pattern that we've already seen.
-	if (mgroups[self.namePartition(p,r,s,t,'Checking')]) {
+	// get the actual element referred to by position r
+	var e;
+	if (t == 0) {
+	    e = r;
+	} else {
+	    e = sOrder[ p[s][t-1] + 1 ][r];
+	}
+	// First step should be to see if adding this element would
+	// produce a pattern that we've already seen.
+	if (mgroups[self.namePartition(p,e,s,t,'Checking')]) {
 	    // Yes, we have so skip
 	    self.addToQueue([p,r+1,s,t,b,o]);
 	    return;
@@ -751,7 +797,7 @@ function Sociogram() {
 	// Is it already in one of our full groups?
 	for (j = 0; j < s; j++) {
 	    for (k = 0; k < p[j].length; k++) {
-		if (p[j][k] == r) {
+		if (p[j][k] == e) {
 		    add = false;
 		    break;
 		}
@@ -760,7 +806,7 @@ function Sociogram() {
 	// If not, try our current group.
 	if (add) {
 	    for (j = 0; j < t; j++) {
-		if (p[s][j] == r) {
+		if (p[s][j] == e) {
 		    add = false;
 		    break;
 		}
@@ -776,20 +822,20 @@ function Sociogram() {
 	    // Test against the existing elements
 	    for (k = 0; k < t; k++) {
 		// Is there an edge from r to p[s][k]?
-		if (gedges[r][p[s][k]] == 1) {
+		if (gedges[e][p[s][k]] == 1) {
 		    // There's a positive one, so we'll mark it for adding
 		    add = true;
-		} else if (gedges[r][p[s][k]] == -1) {
+		} else if (gedges[e][p[s][k]] == -1) {
 		    // There's a negative one either to or from, so we'll not add it
 		    add = false;
 		    break;
 		}
 	    }
-	}	
+	}
 	if (add) {
 	    // Okay, so we're adding.
-	    mgroups[self.namePartition(p,r,s,t,'Adding')] = true;
-	    p[s][t] = r;
+	    mgroups[self.namePartition(p,e,s,t,'Adding')] = true;
+	    p[s][t] = e;
 	    // Now step onwards
 	    if (t == p[s].length - 1) {
 		// End of group,
@@ -911,9 +957,11 @@ function Sociogram() {
 	var inc;
 	var out;
 	var con;
+	var arr;
 	inc = [];
 	out = [];
 	con = [];
+	arr = [];
 	for (j = 0; j < g.length; j++) {
 	    con[j] = 0;
 	}
@@ -922,34 +970,47 @@ function Sociogram() {
 	for (j = 0; j < g.length; j++) {
 	    inc[j] = 0;
 	    out[j] = 0;
+	    arr[j] = 0;
 	    for (k = 0; k < g.length; k++) {
 		if (con[j] == 1) {
 		    con[k] = Math.max(con[k],edges[g[j]][g[k]],edges[g[k]][g[j]]);
 		}
-		if (edges[g[j]][g[k]] == 1)
+		if (edges[g[j]][g[k]] == 1) {
 		    out[j] = 1;
-		if (edges[g[k]][g[j]] == 1)
+		    arr[j] = 1;
+		}
+		if (edges[g[k]][g[j]] == 1) {
 		    inc[j] = 1;
+		    arr[j] = 1;
+		}
 	    }
 	}
-	    // Does every node have an incoming arrow?
-	    if (minArray(inc) == 1) {
-		s += 1;
-	    } else {
-		s += 0;
-	    }
-	    // Does every node have an outgoing arrow?
-	    if (minArray(out) == 1) {
-		s += 1;
-	    } else {
-		s += 0;
-	    }
+	// Does every node have an incoming arrow?
+	if (minArray(inc) == 1) {
+	    s += 1;
+	} else {
+	    s += 0;
+	}
+	// Does every node have an outgoing arrow?
+	if (minArray(out) == 1) {
+	    s += 1;
+	} else {
+	    s += 0;
+	}
+	// Does every node have an arrow of some discription?
+	if (minArray(arr) == 1) {
+	    s += 1;
+	} else {
+	    s += 0;
+	}
+	/*
 	    // Is it weakly connected?
 	    if (minArray(con) == 1) {
 		s += 1;
 	    } else {
 		s += 0;
 	    }
+	*/
 	/*
 	// Does every node have an incoming arrow?
 	if (minArray(inc) == 1)
