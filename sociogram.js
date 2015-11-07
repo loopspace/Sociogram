@@ -714,7 +714,7 @@ function Sociogram() {
 		    valency[i]++;
 	    }
 	}
-	sOrder[0].sort(function(a,b) { return valency[a] - valency[b] });
+	sOrder[0].sort(function(a,b) { return valency[b] - valency[a] });
 	rOrder = [];
 	for (i = 0; i <= size; i++) {
 	    rOrder[i] = [];
