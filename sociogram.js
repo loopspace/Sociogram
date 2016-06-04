@@ -1,5 +1,6 @@
 function init() {
     var sociogram = new Sociogram();
+    sociogram.setInputs('#list','#text');
     var tbdy = document.querySelector('#list');
     var btn = document.querySelector('#add');
     btn.onclick = function(e) {
@@ -97,10 +98,9 @@ function init() {
     var reader = new FileReader();
     var upload = document.querySelector('#fileUpload');
 
-    var fileText;
     upload.onchange = function(f) {
 	reader.onload = function(e) {
-            fileText = e.target.result;
+            sociogram.setFileText(e.target.result);
 	}
 	reader.readAsText(f.target.files[0]);
     }
@@ -129,11 +129,6 @@ function init() {
 
 window.onload = init;
 
-
-/*
-Should all DOM elements should be passed by an initialiser rather than
-being hardcoded?
-*/
 function Sociogram() {
     var self = this;
     var vertices = [];
@@ -143,7 +138,20 @@ function Sociogram() {
     var size = 0;
     var dom = {};
     var mgroups;
+    var form;
+    var text;
+    var fileText;
+  
 
+    this.setInputs = function(fm,tx) {
+	form = fm;
+	text = tx;
+    }
+
+    this.setFileText = function(fl) {
+	fileText = fl;
+    }
+    
     this.hasData = function() {
 	return size !== 0;
     }
@@ -279,9 +287,9 @@ function Sociogram() {
 	var input = document.querySelector('input[name="input"]:checked').value;
 
 	if (input == "form") {
-	    self.fromForm('#list');
+	    self.fromForm(form);
 	} else if (input == "text") {
-	    self.fromText('#text');
+	    self.fromText(text);
 	} else if (input == "file") {
 	    self.fromFile(fileText);
 	}
