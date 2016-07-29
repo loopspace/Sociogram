@@ -321,8 +321,10 @@ function Sociogram() {
 	var ncolsel = document.querySelector('#ncolour');
 	var ndcolsel = document.querySelector('#ndcolour');
 	var ndbgcolsel = document.querySelector('#ndbgcolour');
+	var ndtxtcolsel = document.querySelector('#ndtxtcolour');
 	var nodeshsel = document.querySelector('#nodeshape');
 	var ndedcolsel = document.querySelector('#nodeedge');
+	var anon = document.querySelector('#anonymous').checked;
     
 	var title = document.querySelector('#title').value;
 	var cell;
@@ -343,10 +345,14 @@ function Sociogram() {
 	}
 	style += ndedcolsel.options[ndedcolsel.selectedIndex].value;
 	style += '",';
-	var dot = 'strict digraph Class { splines=true; overlap=orthoyx; label="' + title + '"; labeloc=b; labeljust=center; fontsize=30; colorscheme="svg"; { node [' + style + 'shape=' + nodeshsel.options[nodeshsel.selectedIndex].value + ',color=' + ndcolsel.options[ndcolsel.selectedIndex].value + ',fillcolor=' + ndbgcolsel.options[ndbgcolsel.selectedIndex].value + ']; ';
+	var dot = 'strict digraph Class { splines=true; overlap=orthoyx; label="' + title + '"; labeloc=b; labeljust=center; fontsize=30; colorscheme="svg"; { node [' + style + 'shape=' + nodeshsel.options[nodeshsel.selectedIndex].value + ',color=' + ndcolsel.options[ndcolsel.selectedIndex].value + ',fillcolor=' + ndbgcolsel.options[ndbgcolsel.selectedIndex].value + ',fontcolor=' + ndtxtcolsel.options[ndtxtcolsel.selectedIndex].value + ']; ';
 
 	for (i=0; i<size; i++) {
-	    dot += 'STUDENT' + i + ' [label="' + vertices[i] + '"]; ';
+	    if (anon) {
+		dot += 'STUDENT' + i + ' [label="STUDENT' + pad(i,2) + '"]; ';
+	    } else {
+		dot += 'STUDENT' + i + ' [label="' + vertices[i] + '"]; ';
+	    }
 	}
 
 	dot += '} ';
@@ -436,6 +442,7 @@ function Sociogram() {
 	if (size == 0) {
 	    return;
 	}
+	var anon = document.querySelector('#anonymous').checked;
 	var p,n,mp,mn,svg;
 	var scale = 50;
 	var ptradius = 5;
@@ -571,17 +578,19 @@ function Sociogram() {
 	    txt.appendChild(label);
 	    svg.appendChild(txt);
 	});
-	vertices.forEach(function(v,i) {
-	    var txt = document.createElementNS("http://www.w3.org/2000/svg",'text');
-	    txt.setAttribute('x',transformX(mp + 3));
-	    txt.setAttribute('y',transformY((i-1)/2));
-	    //	txt.setAttribute('font-size',10);
-	    txt.setAttribute('text-anchor','start');
-	    var label = document.createTextNode(pad(i+1,2) + ' ' + v);
-	    txt.appendChild(label);
-	    svg.appendChild(txt);
+	if (!anon) {
+	    vertices.forEach(function(v,i) {
+		var txt = document.createElementNS("http://www.w3.org/2000/svg",'text');
+		txt.setAttribute('x',transformX(mp + 3));
+		txt.setAttribute('y',transformY((i-1)/2));
+		//	txt.setAttribute('font-size',10);
+		txt.setAttribute('text-anchor','start');
+		label = document.createTextNode(pad(i+1,2) + ' ' + v);
+		txt.appendChild(label);
+		svg.appendChild(txt);
 	    
-	});
+	    });
+	}
 	var out = document.querySelector(id);
 	out.innerHTML = '';
 	out.appendChild(svg);
@@ -1140,7 +1149,7 @@ function Sociogram() {
 
 
 function pad(n,l) {
-    var ln = Math.floor(Math.log10(Math.abs(n)))+1; // length of n
+    var ln = Math.max(1,Math.floor(Math.log10(Math.abs(n)))+1); // length of n
     var z;
     if (ln < l) {
 	z = new Array(l - ln + 1).join('0');
