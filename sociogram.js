@@ -190,7 +190,8 @@ function Sociogram() {
 	self.addVertex(b);
 	var i = labels[a];
 	var j = labels[b];
-	edges[i][j] = e;
+	if (i != j)
+	    edges[i][j] = e;
     }
     
     /*
@@ -241,7 +242,7 @@ function Sociogram() {
 	var name;
 
 	lines.forEach(function(v,i) {
-	    var re = /\s*;\s*/;
+	    var re = /\s*[;\t]\s*/;
 	    var e = v.split(re);
 	    if (e.length > 1) {
 		re = /\s*,\s*/;
@@ -526,7 +527,7 @@ function Sociogram() {
 	yaxis.setAttribute('stroke-width',1);
 	yaxis.setAttribute('marker-end','url(#triangle)');
 	svg.appendChild(yaxis);
-	var notch,tick,tlbl,i;
+	var notch,tick,tlbl,i,xlabel,ylabel;
 	for ( i=1;i<=mp;i++) {
 	    notch = document.createElementNS("http://www.w3.org/2000/svg",'path');
 	    notch.setAttribute('d','M ' + transformX(i) + ' ' + transformY(0) + ' l 0 ' +  transformDY(-.3));
@@ -542,6 +543,14 @@ function Sociogram() {
 	    tick.appendChild(tlbl);
 	    svg.appendChild(tick);
 	}
+	xlabel = document.createElementNS("http://www.w3.org/2000/svg",'text');
+	xlabel.setAttribute('x',transformX(mp+1));
+	xlabel.setAttribute('y',transformY(-.35));
+	xlabel.setAttribute('text-anchor','middle');
+	xlabel.setAttribute('style','dominant-baseline: hanging');
+	var xtlbl = document.createTextNode("+ve");
+	xlabel.appendChild(xtlbl);
+	svg.appendChild(xlabel);
 	for ( i=1;i<=mn;i++) {
 	    notch = document.createElementNS("http://www.w3.org/2000/svg",'path');
 	    notch.setAttribute('d','M ' + transformX(0) + ' ' + transformY(i) + ' l ' +  transformDX(-.3) + ' 0');
@@ -557,6 +566,15 @@ function Sociogram() {
 	    tick.appendChild(tlbl);
 	    svg.appendChild(tick);
 	}
+	ylabel = document.createElementNS("http://www.w3.org/2000/svg",'text');
+	ylabel.setAttribute('x',transformX(-.35));
+	ylabel.setAttribute('y',transformY(mn+1));
+	ylabel.setAttribute('text-anchor','end');
+	ylabel.setAttribute('style','dominant-baseline: middle');
+	var ytlbl = document.createTextNode("-ve");
+	ylabel.appendChild(ytlbl);
+	svg.appendChild(ylabel);
+	
 	Object.keys(grid).forEach(function(v) {
 	    var circle = document.createElementNS("http://www.w3.org/2000/svg",'circle');
 	    circle.setAttribute('cx',transformX(grid[v].x));
