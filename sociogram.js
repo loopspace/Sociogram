@@ -22,14 +22,6 @@ function init() {
 
 
     var colsels = ['p', 'n', 'nd', 'ndbg'];
-    colsels.forEach(function(v) {
-	var cs = document.querySelector('#' + v + 'colour');
-	var csd = document.querySelector('#' + v + 'colourdemo');
-	csd.style.backgroundColor = cs.options[cs.selectedIndex].value;
-	cs.onchange = function (e) {
-	    csd.style.backgroundColor = e.target.options[e.target.selectedIndex].value;
-	};
-    });
 
     var fname = document.querySelector('#filename');
     fname.onchange = function(e) {
@@ -134,6 +126,7 @@ function Sociogram() {
     var vertices = [];
     var labels = {};
     var edges = [];
+	var specified = [];
     var gedges; // used for making the groups
     var size = 0;
     var dom = {};
@@ -167,7 +160,7 @@ function Sociogram() {
       Add a vertex with the given label providing it doesn't already exist.
       Also add the corresponding entries to the matrix of edges.
      */
-    this.addVertex = function(l) {
+    this.addVertex = function(l,b) {
 	if (!labels.hasOwnProperty(l)) {
 	    vertices.push(l);
 	    labels[l] = size;
@@ -177,7 +170,11 @@ function Sociogram() {
 		edges[i][size] = 0;
 	    }
 	    edges[size][size] = 0;
+		specified[size] = b;
 	    size++;
+	} else {
+		var i = labels[l];
+		specified[i] ||= b;
 	}
     }
 
@@ -186,8 +183,8 @@ function Sociogram() {
       if necessary.
      */
     this.addEdge = function(a,b,e) {
-	self.addVertex(a);
-	self.addVertex(b);
+		self.addVertex(a,false);
+		self.addVertex(b,false);
 	var i = labels[a];
 	var j = labels[b];
 	if (i != j)
@@ -208,7 +205,7 @@ function Sociogram() {
 	
 	for (i = 0; i<n; i++) {
 	    name = rows[i].children[0].children[0].value;
-	    self.addVertex(name);
+	    self.addVertex(name,true);
 
 	    if (rows[i].children[1].children[0].value != '' ) {
 		names = rows[i].children[1].children[0].value.split(re);
@@ -247,7 +244,7 @@ function Sociogram() {
 	    if (e.length > 1) {
 		re = /\s*,\s*/;
 		name = e[0];
-		self.addVertex(name);
+		self.addVertex(name,true);
 		if (typeof e[1] !== 'undefined' && e[1] != '') {
 		    e[1].split(re).forEach(function(v) {self.addEdge(name,v,1)});
 		}
@@ -259,11 +256,14 @@ function Sociogram() {
     }
 
     this.toString = function() {
+		var ignore = document.querySelector('#dncreate').checked;
+
 	var ss = [];
 	var i;
 	var pos;
 	var neg;
 	for (i = 0; i < size; i++) {
+		if (!dncreate || specified[i]) {
 	    pos = [];
 	    neg = [];
 	    edges[i].forEach(function(v,j) {
@@ -274,6 +274,7 @@ function Sociogram() {
 		}
 	    });
 	    ss.push([vertices[i],pos.join(','),neg.join(',')]);
+		}
 	};
 	var sss = [];
 	ss.forEach(function(v) {
@@ -326,6 +327,7 @@ function Sociogram() {
 	var nodeshsel = document.querySelector('#nodeshape');
 	var ndedcolsel = document.querySelector('#nodeedge');
 	var anon = document.querySelector('#anonymous').checked;
+	var ignore = document.querySelector('#dncreate').checked;
     
 	var title = document.querySelector('#title').value;
 	var cell;
@@ -344,35 +346,41 @@ function Sociogram() {
 	if (document.querySelector('#rounded').checked) {
 	    style += 'rounded,';
 	}
-	style += ndedcolsel.options[ndedcolsel.selectedIndex].value;
+	style += ndedcolsel.value;
 	style += '",';
-	var dot = 'strict digraph Class { splines=true; overlap=orthoyx; label="' + title + '"; labeloc=b; labeljust=center; fontsize=30; colorscheme="svg"; { node [' + style + 'shape=' + nodeshsel.options[nodeshsel.selectedIndex].value + ',color=' + ndcolsel.options[ndcolsel.selectedIndex].value + ',fillcolor=' + ndbgcolsel.options[ndbgcolsel.selectedIndex].value + ',fontcolor=' + ndtxtcolsel.options[ndtxtcolsel.selectedIndex].value + ']; ';
+	var dot = 'strict digraph Class { splines=true; overlap=orthoyx; label="' + title + '"; labeloc=b; labeljust=center; fontsize=30; colorscheme="svg"; { node [' + style + 'shape=' + nodeshsel.value + ',color="' + ndcolsel.value + '",fillcolor="' + ndbgcolsel.value + '",fontcolor="' + ndtxtcolsel.value + '"]; ';
 
 	for (i=0; i<size; i++) {
+		if (!dncreate || specified[i]) { 
 	    if (anon) {
 		dot += 'STUDENT' + i + ' [label="STUDENT' + pad(i,2) + '"]; ';
 	    } else {
 		dot += 'STUDENT' + i + ' [label="' + vertices[i] + '"]; ';
 	    }
+		}
 	}
 
 	dot += '} ';
 
 	if (positive) {
-	    dot += '{ edge [color="' + pcolsel.options[pcolsel.selectedIndex].value + '"]; ';
+	    dot += '{ edge [color="' + pcolsel.value + '"]; ';
 	    dot += '{ edge [dir="both"]; ';
 	    for (i=0; i<size; i++) {
 		for (j=i; j<size; j++) {
+		if (!dncreate || (specified[i] && specified[j])) {
 		    if (edges[i][j] == 1 && edges[j][i] == 1) {
 			dot += ' STUDENT' + i + ' -> STUDENT' + j + '; ';
 		    }
+			}
 		}
 	    }
 	    dot += '} ';
 	    for (i=0; i<size; i++) {
 		for (j=0; j<size; j++) {
+		if (!dncreate || (specified[i] && specified[j])) {
 		    if (edges[i][j] == 1 && edges[j][i] != 1) {
 			dot += ' STUDENT' + i + ' -> STUDENT' + j + '; ';
+			}
 		    }
 		}
 	    }
@@ -380,21 +388,25 @@ function Sociogram() {
 	}
     
 	if (negative) {
-	    dot += '{ edge [color="' + ncolsel.options[ncolsel.selectedIndex].value + '"]; ';
+	    dot += '{ edge [color="' + ncolsel.value + '"]; ';
 	    dot += '{ edge [dir="both"]; ';
 	    for (i=0; i<size; i++) {
 		for (j=i; j<size; j++) {
+		if (!dncreate || (specified[i] && specified[j])) {
 		    if (edges[i][j] == -1 && edges[j][i] == -1) {
 			dot += ' STUDENT' + i + ' -> STUDENT' + j + '; ';
 		    }
+			}
 		}
 	    }
 	    dot += '} ';
 	    for (i=0; i<size; i++) {
 		for (j=0; j<size; j++) {
+		if (!dncreate || (specified[i] && specified[j])) {
 		    if (edges[i][j] == -1 && edges[j][i] != -1) {
 			dot += ' STUDENT' + i + ' -> STUDENT' + j + '; ';
 		    }
+			}
 		}
 	    }
 	    dot += '} ';
@@ -852,7 +864,7 @@ function Sociogram() {
 	    // Not yet in a group, so look for arrows to existing elements.
 	    
 	    // If there's no negatives, do we add or not?
-	    add = b
+	    add = b;
 	    
 	    // Test against the existing elements
 	    for (k = 0; k < t; k++) {
