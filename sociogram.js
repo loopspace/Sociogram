@@ -991,9 +991,9 @@ function Sociogram() {
 	    score = self.checkElementInGroup(p[i],0);
 	    if (score[0] > 0 && score[1] > 0) {
 		spn.classList.add('inoutPositive');
-	    } else if (score[0] > 1) {
+	    } else if (score[0] > 0) {
 		spn.classList.add('outgoingPositive');
-	    } else if (score[1] > 1) {
+	    } else if (score[1] > 0) {
 		spn.classList.add('incomingPositive');
 	    }
 	    if (score[2] > 0 || score [3] > 0) {
@@ -1012,9 +1012,9 @@ function Sociogram() {
 		score = self.checkElementInGroup(p[i],j);
 		if (score[0] > 0 && score[1] > 0) {
 		    spn.classList.add('inoutPositive');
-		} else if (score[0] > 1) {
+		} else if (score[0] > 0) {
 		    spn.classList.add('outgoingPositive');
-		} else if (score[1] > 1) {
+		} else if (score[1] > 0) {
 		    spn.classList.add('incomingPositive');
 		}
 		if (score[2] > 0 || score [3] > 0) {
@@ -1060,7 +1060,7 @@ function Sociogram() {
 	var pinc = 0;
 	var nout = 0;
 	var ninc = 0;
-	for (k = 0; k < g.length; k++) {
+	for (var k = 0; k < g.length; k++) {
 	    if (edges[g[j]][g[k]] == 1) {
 		pout += 1;
 	    }
@@ -1263,61 +1263,133 @@ function Sociogram() {
 	}
 	grptbl.innerHTML = '';
 	var s = document.createElement('ul');
-	var a,i,j,li,txt,spn,score;
+	var a,i,j,li,txt,spn,score,hlst,hlstelt;
 	var sc = [0,0,0,0];
 	for (i = 0; i < p.length; i++) {
 	    li = document.createElement('li');
+		li.classList.add('editableSingleGroup');
 
 	    txt = document.createTextNode('(' + self.scoreGroup(p[i],'') + ') ');
 	    spn = document.createElement('span');
 	    spn.classList.add('score');
+		spn.setAttribute('id', 'Score' + i);
 	    spn.appendChild(txt);
+		
 	    li.appendChild(spn);
-
-	    txt = document.createTextNode(vertices[p[i][0]]);
-	    spn = document.createElement('span');
-	    spn.classList.add('groupElement');
-	    score = self.checkElementInGroup(p[i],0);
-	    if (score[0] > 0 && score[1] > 0) {
-		spn.classList.add('inoutPositive');
-	    } else if (score[0] > 1) {
-		spn.classList.add('outgoingPositive');
-	    } else if (score[1] > 1) {
-		spn.classList.add('incomingPositive');
-	    }
-	    if (score[2] > 0 || score [3] > 0) {
-		spn.classList.add('negative');
-	    }
-	    spn.appendChild(txt);
-	    li.appendChild(spn);
+		hlst = document.createElement('ul');
+		hlst.classList.add('horizontalList');
+		hlst.setAttribute('id', 'Group' + i);
 	    
-	    for (j = 1; j < p[i].length; j++) {
-		txt = document.createTextNode(', ');
-		li.appendChild(txt);
+	    for (j = 0; j < p[i].length; j++) {
 
 		txt = document.createTextNode(vertices[p[i][j]]);
+
+		hlstelt = document.createElement('li');
+		hlstelt.classList.add('editableGroupElement');
+		hlstelt.setAttribute('id', 'Element' + p[i][j]);
+
 		spn = document.createElement('span');
 		spn.classList.add('groupElement');
+		spn.dataset.elt = p[i][j];
+
 		score = self.checkElementInGroup(p[i],j);
 		if (score[0] > 0 && score[1] > 0) {
 		    spn.classList.add('inoutPositive');
-		} else if (score[0] > 1) {
+		} else if (score[0] > 0) {
 		    spn.classList.add('outgoingPositive');
-		} else if (score[1] > 1) {
+		} else if (score[1] > 0) {
 		    spn.classList.add('incomingPositive');
 		}
 		if (score[2] > 0 || score [3] > 0) {
 		    spn.classList.add('negative');
 		}
 		spn.appendChild(txt);
-		li.appendChild(spn);
+		hlstelt.appendChild(spn);
+		hlst.appendChild(hlstelt);
 	    }
+		li.appendChild(hlst);
+		new Sortable(hlst, {
+		group: 'editableGroup',
+		animation: 150,
+		fallbackOnBody: true,
+		swapThreshold: 0.65,
+		onEnd: function (evt) {
+			self.resetRelationships();
+			self.resetScores(evt.to);
+			self.resetScores(evt.from);
+		},
+		onStart: function (evt) {
+			var id = parseInt(evt.item.getAttribute('id').substring(7));
+			self.showRelationships(id);
+		}
+	});
 	    
 	    s.appendChild(li);
 	}
 	grptbl.appendChild(s);
+	
     }
     
+	this.showRelationships = function(i) {
+		var spn;
+		for (var j = 0; j < size; j++) {
+			spn = document.getElementById('Element' + j).getElementsByTagName('span')[0];
+			if (gedges[i][j] == -1) {
+				spn.classList.add('negativeTemp');
+			} else if (gedges[i][j] == 1 && gedges[j][i] == 1) {
+				spn.classList.add('inoutPositiveTemp');
+			} else if (gedges[i][j] == 1) {
+				spn.classList.add('incomingPositiveTemp');
+			} else if (gedges[j][i] == 1) {
+				spn.classList.add('outgoingPositiveTemp');
+			}
+		}
+	}
+	
+	this.resetRelationships = function() {
+		var classes = ['negativeTemp', 'incomingPositiveTemp', 'outgoingPositiveTemp', 'inoutPositiveTemp'];
+		for (var c of classes) {
+			Array.from(document.querySelectorAll("." + c)).forEach(
+				(el) => el.classList.remove(c)
+			);
+		}
+	}
+	
+	this.resetScores = function(lst) {
+		var elts = lst.children;
+		var grp = [];
+		var spans = [];
+		var id;
+		for (e of elts) {
+			id = e.getAttribute('id');
+			grp.push(parseInt(id.substring(7)));
+			spans.push(e.getElementsByTagName('span')[0]);
+		}
+		var score;
+		for (var i = 0; i < grp.length; i++) {
+			score = self.checkElementInGroup(grp,i);
+			spans[i].classList.remove(...spans[i].classList);
+			spans[i].classList.add('groupElement');
+		if (score[0] > 0 && score[1] > 0) {
+		    spans[i].classList.add('inoutPositive');
+		} else if (score[0] > 0) {
+		    spans[i].classList.add('outgoingPositive');
+		} else if (score[1] > 0) {
+		    spans[i].classList.add('incomingPositive');
+		}
+		if (score[2] > 0 || score [3] > 0) {
+		    spans[i].classList.add('negative');
+		}
+
+		}
+		var id = lst.getAttribute('id');
+		var txt = document.createTextNode('(' + self.scoreGroup(grp,'') + ') ');
+		var spn = document.getElementById('Score' + id.substring(5) );
+		spn.innerHTML = '';
+		spn.appendChild(txt);
+
+	}
+	
 }
 
 

@@ -28,6 +28,13 @@
     overflow-x: hidden;
 }
 
+#editableGroup {
+	border-bottom: 1px black dashed;
+	border-top: 1px black dashed;
+	padding-bottom: 1em;
+	padding-top: 1em;
+}
+
 .groupElement {
     color: red;
 }
@@ -56,4 +63,51 @@
 
 .negative {
     background-color: yellow;
+}
+
+.horizontalList {
+	display: inline-block;
+}
+
+.horizontalList li + li:before {
+	content: ", ";
+	padding-right: 1em;
+}
+
+.horizontalList li {
+	display: inline-block;
+}
+
+.negativeTemp {
+	border-radius: 5px;
+	border: 1px yellow solid;
+}
+
+.incomingPositiveTemp {
+	border-radius: 5px;
+	border: 1px blue solid;
+}
+
+.outgoingPositiveTemp {
+	border-radius: 5px;
+	border: 1px green solid;
+}
+
+.inoutPositiveTemp {
+	border-radius: 5px;
+	border: 1px purple solid;
+}
+
+.incomingPositiveTemp::before {
+    content: '→';
+}
+.outgoingPositiveTemp::before {
+    content: '←';
+}
+.inoutPositiveTemp::before {
+    content: '↔';
+}
+
+negativeTemp::before {
+	content: 'X';
 }
