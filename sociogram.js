@@ -712,12 +712,14 @@ function Sociogram() {
 	var re = /\s*[;\t]\s*/;
 	var e = sds.split(re);
 	re = /\s*,\s*/;
-	var er;
-	for (var i = 0; i < e.length; i++) {
+	var er,spos;
+	for (var i = 0; i < Math.min(e.length,groups.length); i++) {
 	    er = e[i].split(re);
+	    spos = 0;
 	    for (var j = 0; j < er.length; j++) {
-		if (labels[er[j]]) {
-		    partition[i][j] = labels[er[j]];
+		if (labels.hasOwnProperty(er[j])) {
+		    partition[i][spos] = labels[er[j]];
+		    spos++;
 		    seeds[i]++;
 		}
 	    }
@@ -1128,7 +1130,6 @@ function Sociogram() {
 	    con[j] = 0;
 	}
 	con[0] = 1;
-	    
 	for (j = 0; j < g.length; j++) {
 	    inc[j] = 0;
 	    out[j] = 0;
