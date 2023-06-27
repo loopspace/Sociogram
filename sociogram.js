@@ -810,7 +810,7 @@ function Sociogram() {
 	}
 	var gstrong = document.querySelector('#gstrong').checked;
 	self.startQueue();
-	self.doPartition(partition,seeds,sOrder[0][0],0,seeds[0],gstrong,list);
+	self.doPartition(partition,seeds,0,0,seeds[0],gstrong,list);
     }
 
     /*
@@ -835,8 +835,8 @@ function Sociogram() {
     this.doPartition = function(p,m,r,s,t,b,o) {
 	if (r == size) {
 	    // Backtrack to previous position
-	    if (t == m[s]) {
-		// We're at the start of a group so need to backtrack into the previous group
+	    if (t == m[s] || s == p.length - 1) {
+		// Either we're at the start of a group or we're in the last group so need to backtrack into the previous group
 		if (s == 0) {
 		    // We've backtracked all the way to the start, so we're done.
 		    self.stopQueue();
@@ -854,7 +854,7 @@ function Sociogram() {
 		}
 	    } else {
 		t = t - 1;
-		if (t == m[s]) {
+		if (t == 0) {
 		    r = p[s][t] + 1;
 		} else {
 		    r = rOrder[ p[s][t-1] + 1 ][ p[s][t] ] + 1;
