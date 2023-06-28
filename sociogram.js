@@ -653,6 +653,8 @@ function Sociogram() {
     var pScores;
     var sOrder;
     var rOrder;
+    var startAt;
+    var valency;
 
     this.generateGroups = function(btn,id) {
 	gbtn = btn;
@@ -699,18 +701,24 @@ function Sociogram() {
 
 	var partition = [];
 	var seeds = [];
+	startAt = [];
 	var i,j;
 	for (i = 0; i < groups.length; i++) {
 	    partition.push([]);
 	    seeds.push(0);
+	    startAt.push([]);
 	    for (j = 0; j < groups[i]; j++) {
 		partition[i][j] = -1;
+		startAt[i][j] = 0;
 	    }
 	}
+//	startAt = 0;
 
 	var sds = document.querySelector('#seeds').value;
-	var re = /\s*[;\t]\s*/;
+
+	var re = /[\r\n]+/;
 	var e = sds.split(re);
+
 	re = /\s*,\s*/;
 	var er,spos;
 	for (var i = 0; i < Math.min(e.length,groups.length); i++) {
@@ -724,6 +732,7 @@ function Sociogram() {
 		}
 	    }
 	}
+
 	var cpy = [];
 	for (var i = 0; i < partition.length; i++) {
 		cpy.push([]);
@@ -737,16 +746,16 @@ function Sociogram() {
 	mgroups = [];
 	gScores = [];
 	var i,j,k,l;
-	for (i=0; i < groups.length; i++) {
+	for (i=0; i < size; i++) {
 	    gScores[i] = [];
 	    gScores[i].size = 0;
-	    for (j=0; j < groups.length; j++) {
+	    for (j=0; j < size; j++) {
 		gScores[i][j] = [];
 		gScores[i][j].size = 0;
-		for (k=0; k < groups.length; k++) {
+		for (k=0; k < size; k++) {
 		    gScores[i][j][k] = [];
 		    gScores[i][j][k].size = 0;
-		    for (l=0; l < groups.length; l++) {
+		    for (l=0; l < size; l++) {
 			gScores[i][j][k][l] = [];
 			gScores[i][j][k][l].size = 0;
 		    }
@@ -787,7 +796,7 @@ function Sociogram() {
 	for (j = 0; j < size; j++) {
 	    sOrder[0][j] = j;
 	}
-	var valency = [];
+	valency = [];
 	for (i = 0; i < size; i++) {
 	    valency[i] = 0;
 	    for (j = 0; j < size; j++) {
@@ -796,11 +805,7 @@ function Sociogram() {
 	    }
 	}
 	sOrder[0].sort(function(a,b) { return valency[a] - valency[b] });
-/*
-	for (var i = 0; i < size; i++) {
-	    console.log(sOrder[0][i], valency[sOrder[0][i]]);
-	}
-*/
+
 	rOrder = [];
 	for (i = 0; i <= size; i++) {
 	    rOrder[i] = [];
@@ -810,6 +815,7 @@ function Sociogram() {
 	}
 	var gstrong = document.querySelector('#gstrong').checked;
 	self.startQueue();
+//	startAt = 0;
 	self.doPartition(partition,seeds,0,0,seeds[0],gstrong,list);
     }
 
@@ -833,7 +839,13 @@ function Sociogram() {
       group if we're at the start.
      */
     this.doPartition = function(p,m,r,s,t,b,o) {
-	if (r == size) {
+
+//	if (r == size) {
+//	    startAt++;
+//	    startAt %= size;
+	    // Restart from a fresh position
+
+		/*
 	    // Backtrack to previous position
 	    if (t == m[s] || s == p.length - 1) {
 		// Either we're at the start of a group or we're in the last group so need to backtrack into the previous group
@@ -861,9 +873,12 @@ function Sociogram() {
 		}
 		self.addToQueue([p,m,r,s,t,b,o]);
 	    }
-	    return;
-	}
+		*/
+//	    return;
+//	}
 	// get the actual element referred to by position r
+	r += startAt[s][t];
+	r %= size;
 	var e;
 	if (t == 0) {
 	    e = r;
@@ -872,22 +887,39 @@ function Sociogram() {
 	}
 	// First step should be to see if adding this element would
 	// produce a pattern that we've already seen.
+	/*
 	if (mgroups[self.namePartition(p,e,s,t,'Checking')]) {
 	    // Yes, we have so skip
 	    self.addToQueue([p,m,r+1,s,t,b,o]);
 	    return;
 	}
+	*/
 	var j,k,add;
 	// Assume we'll be adding it
 	add = true;
-	// Is it already in one of our full groups?
-	for (j = 0; j < s; j++) {
-	    for (k = 0; k < p[j].length; k++) {
+	stop = false;
+	// Is it a preset element?
+	for (var j = 0; j < p.length; j++) {
+	    for (var k = 0; k < m[j]; k++) {
 		if (p[j][k] == e) {
 		    add = false;
+		    stop = true;
 		    break;
 		}
 	    }
+	    if (stop) {break};
+	}
+	stop = false;
+	// Is it already in one of our full groups?
+	for (var j = 0; j < s; j++) {
+	    for (k = 0; k < p[j].length; k++) {
+		if (p[j][k] == e) {
+		    add = false;
+		    stop = true;
+		    break;
+		}
+	    }
+	    if (stop) {break};
 	}
 	// If not, try our current group.
 	if (add) {
@@ -920,16 +952,39 @@ function Sociogram() {
 	}
 	if (add) {
 	    // Okay, so we're adding.
-	    mgroups[self.namePartition(p,e,s,t,'Adding')] = true;
 	    p[s][t] = e;
 	    // Now step onwards
 	    if (t == p[s].length - 1) {
 		// End of group,
 		if (s == p.length - 1) {
 		    // End of partition
-		    self.displayPartition(p,o);
-		    // backtrack, remove last one and redo with next
-		    self.addToQueue([p,m,r+1,s,t,b,o]);
+		    if (!mgroups[self.nameFullPartition(p)]) {
+			self.displayPartition(p,o);
+			mgroups[self.nameFullPartition(p)] = true;
+		    }
+
+		    startAt[0][ m[0] ]++;
+
+		    var stop = false;
+		    for (var i = 0; i < startAt.length; i++) {
+			for (var j = m[i]; j < startAt[i].length; j++) {
+			    if (startAt[i][j] == size) {
+				startAt[i][j] = 0;
+				if (i < startAt.length - 1 && j == startAt[i].length - 1) {
+				    startAt[i+1][0]++;
+				} else if (j < startAt[i].length - 1) {
+				    startAt[i][j+1]++;
+				}
+			    } else {
+				stop = true;
+				break;
+			    }
+			}
+			if (stop) {break};
+		    }
+		    console.log(startAt);
+		    self.addToQueue([p,m,0, 0, m[0],b,o]);
+		    //		    self.addToQueue([p,m,r+1,s,t,b,o]);
 		} else {
 		    // Start again with the next group
 		    self.addToQueue([p,m,0,s+1,m[s+1],b,o]);
@@ -944,6 +999,23 @@ function Sociogram() {
 	}
     }
 
+    this.nameFullPartition = function(p) {
+	var pp = [];
+	for (var i = 0; i < p.length; i++) {
+	    pp[i] = [];
+	    for (var j = 0; j < p[i].length; j++) {
+		pp[i][j] = p[i][j];
+	    }
+	    pp[i].sort();
+	}
+	pp.sort(function(a,b) {return a[0] - b[0]});
+	var ss = [];
+	for (i = 0; i < pp.length; i++) {
+	    ss.push(pp[i].join(','));
+	}
+	return ss.join(';');
+    }
+    
     this.namePartition = function(p,r,s,t,m) {
 	var pp = [];
 	var i,j,ss;
@@ -1012,6 +1084,9 @@ function Sociogram() {
 	    return false;
 	};
 	oli.appendChild(btn);
+	var scspn = document.createElement('span');
+	oli.appendChild(scspn);
+	
 	var s = document.createElement('ul');
 	var a,i,j,li,txt,spn,score;
 	var sc = [0,0,0,0];
@@ -1062,11 +1137,20 @@ function Sociogram() {
 		spn.appendChild(txt);
 		li.appendChild(spn);
 	    }
-	    
-	    sc[self.scoreGroupElements(p[i])]++;
+
+	    score = self.scoreGroupElements(p[i]);
+
+	    for (var j = 0; j < score.length; j++) {
+		sc[j] += score[j];
+	    }
 
 	    s.appendChild(li);
 	}
+	scspn.appendChild(document.createTextNode("(" + sc.join(",") + ")"));
+	sc[0] = size - 1 - sc[0];
+	sc[2] = size - 1 - sc[2];
+	sc[1] = - sc[1];
+	sc[3] = - sc[3];
 	var pos = 0;
 	for (i = 0; i < sc[0]; i++) {
 	    pos += gScores[i].size;
