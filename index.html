@@ -55,17 +55,18 @@
 
 	  <p>
 	    If you specify group sizes, the program will attempt to
-	    fit the items into those groups.  The resulting groups are
-	    guaranteed to have no negative relationships.
+	    fit the items into those groups.
 	  </p>
 
 	  <p>
-	    There are two methods for making the groups.  The stronger
-	    method only adds an item to a group if there is a positive
-	    relationship between an existing item and the new item.  The
-	    weaker method will allow adding an item so long as there are
-	    no negative relationships between it and the existing
-	    items.
+	    There are two options that modify how the groups are
+	    constructed.  When the option to allow disjointed groups
+	    is not checked then an item can be added to a group only
+	    when it has a positive relationship with an item already
+	    in there.  When the option to ignore negatives is not
+	    checked then an item can only be added to a group if it
+	    doesn't have a negative relationship with an item already
+	    in there.
 	  </p>
 
 	  <p>
@@ -76,9 +77,20 @@
 	    answers the question "Does every item have an incoming
 	    positive relationship with another in that group?", the
 	    second is the same but for outgoing, the third is
-	    the same but for either incoming or outgoing.
+	    the same but for either incoming or outgoing.  The full
+	    grouping is also scored, resulting in four numbers.  The
+	    first counts the number of items with a positive
+	    relationship to another item in the same group, the second
+	    is the same but with a negative relationship.  The third
+	    and fourth count the number of items with a positive, or
+	    negative, relationship from another item in the same group.
 	  </p>
 
+	  <p>
+	    Items in the groups can also be preset by listing them in
+	    the textbox.
+	  </p>
+	  
 	  <p>
 	    It can take a long time to go through all the possible
 	    groups.  The dots indicate that the program is still
@@ -297,6 +309,13 @@
 	  <input type="checkbox" name="positive" id="positive">Positive<br>
 	  <input type="checkbox" name="negative"
 		 id="negative">Negative<br>
+	  <div class="buttons">
+	  <a href="" id="generate" class="imgDownload">Generate the Graph</a>
+	  <a href="" id="gchart" class="imgDownload">Generate the
+	    Chart</a>
+	  </div>
+
+	  <h3>Grouping</h3>
 	  <label for="groups">Groups: </label><input type="text" id="groups"
 				   name="groups"><br>
 	  <input type="checkbox" name="gstrong"
@@ -310,9 +329,6 @@
 				     10em; margin: 3ex; padding: 5px;
 				     border-radius: 5px;"></textarea></br>
 	  <div class="buttons">
-	  <a href="" id="generate" class="imgDownload">Generate the Graph</a>
-	  <a href="" id="gchart" class="imgDownload">Generate the
-	    Chart</a>
 	  <a href="" id="groupgen" class="imgDownload">Generate the
 	    Groups</a>
 	  </div>
