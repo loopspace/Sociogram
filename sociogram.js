@@ -131,6 +131,7 @@ function Sociogram() {
     var size = 0;
     var dom = {};
     var mgroups;
+	var pgroups;
     var form;
     var text;
     var fileText;
@@ -655,6 +656,7 @@ function Sociogram() {
     var rOrder;
     var startAt;
     var valency;
+	var firstGroup;
 
     this.generateGroups = function(btn,id) {
 	gbtn = btn;
@@ -715,7 +717,6 @@ function Sociogram() {
 //	startAt = 0;
 
 	var sds = document.querySelector('#seeds').value;
-
 	var re = /[\r\n]+/;
 	var e = sds.split(re);
 
@@ -743,25 +744,9 @@ function Sociogram() {
 
 	// Initialise:
 	gedges = [];
-	mgroups = [];
+	mgroups = {};
+	pgroups = {};
 	gScores = [];
-	var i,j,k,l;
-	for (i=0; i < size; i++) {
-	    gScores[i] = [];
-	    gScores[i].size = 0;
-	    for (j=0; j < size; j++) {
-		gScores[i][j] = [];
-		gScores[i][j].size = 0;
-		for (k=0; k < size; k++) {
-		    gScores[i][j][k] = [];
-		    gScores[i][j][k].size = 0;
-		    for (l=0; l < size; l++) {
-			gScores[i][j][k][l] = [];
-			gScores[i][j][k][l].size = 0;
-		    }
-		}
-	    }
-	}
 	// Ignore negatives when forming groups
 	var gnegative = document.querySelector('#gnegative').checked;
 
@@ -814,9 +799,23 @@ function Sociogram() {
 	    }
 	}
 	var gstrong = document.querySelector('#gstrong').checked;
-	self.startQueue();
+	
+	firstGroup = -1;
+	for (var i = 0; i < partition.length; i++) {
+		if (seeds[i] < partition[i].length) {
+			firstGroup = i;
+			break;
+		}
+	}
+
+	if (firstGroup == -1) {
+		self.displayPartition(partition,list);
+	} else {
+	
+		self.startQueue();
 //	startAt = 0;
-	self.doPartition(partition,seeds,0,0,seeds[0],gstrong,list);
+		self.doPartition(partition,seeds,0,firstGroup,seeds[firstGroup],gstrong,list);
+	}
     }
 
     /*
@@ -839,19 +838,39 @@ function Sociogram() {
       group if we're at the start.
      */
     this.doPartition = function(p,m,r,s,t,b,o) {
-
-//	if (r == size) {
-//	    startAt++;
-//	    startAt %= size;
-	    // Restart from a fresh position
-
-		/*
+	if (r == size) {
 	    // Backtrack to previous position
 	    if (t == m[s] || s == p.length - 1) {
 		// Either we're at the start of a group or we're in the last group so need to backtrack into the previous group
 		if (s == 0) {
-		    // We've backtracked all the way to the start, so we're done.
-		    self.stopQueue();
+		    // We've backtracked all the way to the start, so restart with a different starting point.
+		    startAt[0][ m[0] ]++;
+						
+			// clear our save stack
+			mgroups = {};
+			for (var grp in pgroups) {
+				mgroups[grp] = true;
+			}
+
+		    var stop = false;
+		    for (var i = 0; i < startAt.length; i++) {
+			for (var j = m[i]; j < startAt[i].length; j++) {
+			    if (startAt[i][j] == size) {
+				startAt[i][j] = 0;
+				if (i < startAt.length - 1 && j == startAt[i].length - 1) {
+				    startAt[i+1][0]++;
+				} else if (j < startAt[i].length - 1) {
+				    startAt[i][j+1]++;
+				}
+			    } else {
+				stop = true;
+				break;
+			    }
+			}
+			if (stop) {break};
+		    }
+			console.log(startAt);
+		    self.addToQueue([p,m,0, firstGroup, m[firstGroup],b,o]);
 		    return;
 		} else {
 		    // Previous group
@@ -873,9 +892,8 @@ function Sociogram() {
 		}
 		self.addToQueue([p,m,r,s,t,b,o]);
 	    }
-		*/
-//	    return;
-//	}
+	    return;
+	}
 	// get the actual element referred to by position r
 	r += startAt[s][t];
 	r %= size;
@@ -885,15 +903,18 @@ function Sociogram() {
 	} else {
 	    e = sOrder[ p[s][t-1] + 1 ][r];
 	}
+	// Because of how it works, we can add the item and then check whether it works
+	p[s][t] = e;
+
 	// First step should be to see if adding this element would
 	// produce a pattern that we've already seen.
-	/*
-	if (mgroups[self.namePartition(p,e,s,t,'Checking')]) {
+	
+	if (mgroups[self.namePartition(p,s,t,m,startAt)]) {
 	    // Yes, we have so skip
 	    self.addToQueue([p,m,r+1,s,t,b,o]);
 	    return;
 	}
-	*/
+	
 	var j,k,add;
 	// Assume we'll be adding it
 	add = true;
@@ -952,16 +973,16 @@ function Sociogram() {
 	}
 	if (add) {
 	    // Okay, so we're adding.
-	    p[s][t] = e;
+		// First, save this partition so we don't repeat ourselves
+		mgroups[self.namePartition(p,s,t,m,startAt)] = true;
 	    // Now step onwards
 	    if (t == p[s].length - 1) {
 		// End of group,
 		if (s == p.length - 1) {
-		    // End of partition
-		    if (!mgroups[self.nameFullPartition(p)]) {
+		    // Full partition, so display
 			self.displayPartition(p,o);
-			mgroups[self.nameFullPartition(p)] = true;
-		    }
+			// Restart from a completely fresh position
+			pgroups[self.namePartition(p,s,t,m,startAt)] = true;
 
 		    startAt[0][ m[0] ]++;
 
@@ -982,9 +1003,7 @@ function Sociogram() {
 			}
 			if (stop) {break};
 		    }
-		    console.log(startAt);
-		    self.addToQueue([p,m,0, 0, m[0],b,o]);
-		    //		    self.addToQueue([p,m,r+1,s,t,b,o]);
+		    self.addToQueue([p,m,0, firstGroup, m[firstGroup],b,o]);
 		} else {
 		    // Start again with the next group
 		    self.addToQueue([p,m,0,s+1,m[s+1],b,o]);
@@ -998,6 +1017,8 @@ function Sociogram() {
 	    self.addToQueue([p,m,r+1,s,t,b,o]);
 	}
     }
+	
+	/*
 
     this.nameFullPartition = function(p) {
 	var pp = [];
@@ -1015,18 +1036,52 @@ function Sociogram() {
 	}
 	return ss.join(';');
     }
+	*/
     
-    this.namePartition = function(p,r,s,t,m) {
+    this.namePartition = function(p,s,t,m,st) {
 	var pp = [];
 	var i,j,ss;
 	var ne = 0
+	// Full groups
 	for (i = 0; i< s; i++) {
 	    pp[i] = [];
 	    for (j= 0; j < p[i].length; j++) {
 		ne++;
 		pp[i][j] = p[i][j];
 	    }
+		pp[i].sort();
 	}
+	pp.sort(function(a,b) {return a[0] - b[0]});
+
+	// Current group
+	pp[s] = [];
+	for (i = 0; i <= t; i++) {
+			pp[s][i] = p[s][i];
+	}
+	pp[s].sort();
+	
+	ss = [];
+	for (i = 0; i <= s; i++) {
+	    ss.push(pp[i].join(','));
+	}
+	
+	ss.push("--");
+	pp[s] = [];
+
+	for (i = t; i < p[s].length; i++) {
+		pp[s][i] = st[s][i];
+	}
+	
+	for (i = s+1; i < p.length; i++) {
+		pp[i] = [];
+		for (j = 0; j < m[i]; j++) {
+			pp[i][j] = p[i][j];
+		}
+		for (j = m[i]; j < p[i].length; j++) {
+			pp[i][j] = st[i][j];
+		}
+	}
+	/*
 	// Would adding r fill our current group?
 	if (t == p[s].length - 1) {
 	    // Yes, so consider it as one of the other groups.
@@ -1059,11 +1114,12 @@ function Sociogram() {
 	    pp[s][t] = r;
 	    pp[s].sort(function(a,b) {return a - b});
 	}
+	*/
 	ss = [];
-	for (i = 0; i <= s; i++) {
+	for (i = s; i < p.length; i++) {
 	    ss.push(pp[i].join(','));
 	}
-	var n = ss.join(';');
+//	var n = ss.join(';');
 	return ss.join(';');
     }
     
@@ -1147,6 +1203,44 @@ function Sociogram() {
 	    s.appendChild(li);
 	}
 	scspn.appendChild(document.createTextNode("(" + sc.join(",") + ")"));
+		var pos = 0;
+		for (var i = 0; i < gScores; i++) {
+			if (sc[0] < gScores[i][0]) {
+				break;
+			}
+			if (sc[0] > gScores[i][0]) {
+				pos++;
+			}
+			if(sc[0] == gScores[i][0]) {
+				if (sc[1] > gScores[i][1]) {
+					pos++;
+				}
+				if (sc[1] < gScores[i][1]) {
+					break;
+				}
+			if(sc[1] == gScores[i][1]) {
+				if (sc[2] > gScores[i][2]) {
+					pos++;
+				}
+				if (sc[2] < gScores[i][2]) {
+					break;
+				}
+							if(sc[2] == gScores[i][2]) {
+				if (sc[3] > gScores[i][3]) {
+					pos++;
+				}
+				if (sc[3] < gScores[i][3]) {
+					break;
+				}
+				
+			}
+
+			}
+				
+			}
+		}
+	gScores.splice(pos,0,sc);
+/*
 	sc[0] = size - 1 - sc[0];
 	sc[2] = size - 1 - sc[2];
 	sc[1] = - sc[1];
@@ -1168,6 +1262,7 @@ function Sociogram() {
 	    pos += gScores[sc[0]][sc[1]][sc[2]][i].size;
 	}
 	gScores[sc[0]][sc[1]][sc[2]][sc[3]].size++;
+	*/
 	oli.appendChild(s);
 	pos++;
 	var prev = document.querySelectorAll('.groupList > li:nth-child('+pos+')');
