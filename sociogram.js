@@ -839,21 +839,22 @@ function Sociogram() {
      */
     this.doPartition = function(p,m,r,s,t,b,o) {
 	if (r == size) {
+
 	    // Backtrack to previous position
 	    if (t == m[s] || s == p.length - 1) {
 		// Either we're at the start of a group or we're in the last group so need to backtrack into the previous group
-		if (s == 0) {
+		if (s == firstGroup) {
 		    // We've backtracked all the way to the start, so restart with a different starting point.
-		    startAt[0][ m[0] ]++;
+		    startAt[firstGroup][ m[firstGroup] ]++;
 						
 			// clear our save stack
-			mgroups = {};
+/*			mgroups = {};
 			for (var grp in pgroups) {
 				mgroups[grp] = true;
 			}
-
+*/
 		    var stop = false;
-		    for (var i = 0; i < startAt.length; i++) {
+		    for (var i = firstGroup; i < startAt.length; i++) {
 			for (var j = m[i]; j < startAt[i].length; j++) {
 			    if (startAt[i][j] == size) {
 				startAt[i][j] = 0;
@@ -869,7 +870,6 @@ function Sociogram() {
 			}
 			if (stop) {break};
 		    }
-			console.log(startAt);
 		    self.addToQueue([p,m,0, firstGroup, m[firstGroup],b,o]);
 		    return;
 		} else {
@@ -1018,45 +1018,23 @@ function Sociogram() {
 	}
     }
 	
-	/*
-
-    this.nameFullPartition = function(p) {
-	var pp = [];
-	for (var i = 0; i < p.length; i++) {
-	    pp[i] = [];
-	    for (var j = 0; j < p[i].length; j++) {
-		pp[i][j] = p[i][j];
-	    }
-	    pp[i].sort();
-	}
-	pp.sort(function(a,b) {return a[0] - b[0]});
-	var ss = [];
-	for (i = 0; i < pp.length; i++) {
-	    ss.push(pp[i].join(','));
-	}
-	return ss.join(';');
-    }
-	*/
-    
     this.namePartition = function(p,s,t,m,st) {
 	var pp = [];
 	var i,j,ss;
-	var ne = 0
 	// Full groups
 	for (i = 0; i< s; i++) {
 	    pp[i] = [];
 	    for (j= 0; j < p[i].length; j++) {
-		ne++;
 		pp[i][j] = p[i][j];
 	    }
-		pp[i].sort();
+	    pp[i].sort();
 	}
 	pp.sort(function(a,b) {return a[0] - b[0]});
 
 	// Current group
 	pp[s] = [];
 	for (i = 0; i <= t; i++) {
-			pp[s][i] = p[s][i];
+	    pp[s][i] = p[s][i];
 	}
 	pp[s].sort();
 	
@@ -1068,7 +1046,7 @@ function Sociogram() {
 	ss.push("--");
 	pp[s] = [];
 
-	for (i = t; i < p[s].length; i++) {
+	for (i = t+1; i < p[s].length; i++) {
 		pp[s][i] = st[s][i];
 	}
 	
@@ -1081,45 +1059,10 @@ function Sociogram() {
 			pp[i][j] = st[i][j];
 		}
 	}
-	/*
-	// Would adding r fill our current group?
-	if (t == p[s].length - 1) {
-	    // Yes, so consider it as one of the other groups.
-	    pp[s] = [];
-	    for (i = 0; i < t; i++) {
-		ne++;
-		pp[s][i] = p[s][i];
-	    }
-	    ne++;
-	    pp[s][t] = r;
-	}
-	// Now sort the groups
-	for (i = 0; i < pp.length; i++) {
-	    pp[i].sort(function(a,b) {return a - b});
-	}
-	pp.sort(function(a,b) {return a[0] - b[0]});
-	if (t !== p[s].length - 1) {
-	    // If adding r wouldn't fill our current group then this
-	    // group is different to the others, so we add it on to
-	    // the end.  Since the groups are filled in a fixed order,
-	    // we can't be in the situation where a pattern with only
-	    // full groups matches a pattern with partially filled
-	    // groups.
-	    pp[s] = [];
-	    for (i = 0; i < t; i++) {
-		ne++;
-		pp[s][i] = p[s][i];
-	    }
-	    ne++;
-	    pp[s][t] = r;
-	    pp[s].sort(function(a,b) {return a - b});
-	}
-	*/
-	ss = [];
+
 	for (i = s; i < p.length; i++) {
 	    ss.push(pp[i].join(','));
 	}
-//	var n = ss.join(';');
 	return ss.join(';');
     }
     
@@ -1203,66 +1146,27 @@ function Sociogram() {
 	    s.appendChild(li);
 	}
 	scspn.appendChild(document.createTextNode("(" + sc.join(",") + ")"));
-		var pos = 0;
-		for (var i = 0; i < gScores; i++) {
-			if (sc[0] < gScores[i][0]) {
-				break;
-			}
-			if (sc[0] > gScores[i][0]) {
-				pos++;
-			}
-			if(sc[0] == gScores[i][0]) {
-				if (sc[1] > gScores[i][1]) {
-					pos++;
-				}
-				if (sc[1] < gScores[i][1]) {
-					break;
-				}
-			if(sc[1] == gScores[i][1]) {
-				if (sc[2] > gScores[i][2]) {
-					pos++;
-				}
-				if (sc[2] < gScores[i][2]) {
-					break;
-				}
-							if(sc[2] == gScores[i][2]) {
-				if (sc[3] > gScores[i][3]) {
-					pos++;
-				}
-				if (sc[3] < gScores[i][3]) {
-					break;
-				}
-				
-			}
-
-			}
-				
-			}
-		}
-	gScores.splice(pos,0,sc);
-/*
-	sc[0] = size - 1 - sc[0];
-	sc[2] = size - 1 - sc[2];
-	sc[1] = - sc[1];
-	sc[3] = - sc[3];
 	var pos = 0;
-	for (i = 0; i < sc[0]; i++) {
-	    pos += gScores[i].size;
+	for (var i = 0; i < gScores.length; i++) {
+	    if (sc[0] < gScores[i][0]) {
+		pos++;
+	    } else if (sc[0] > gScores[i][0]) {
+		break;
+	    } else if (sc[1] < gScores[i][1]) {
+		pos++;
+	    } else if (sc[1] > gScores[i][1]) {
+		break;
+	    } else if (sc[2] < gScores[i][2]) {
+		pos++;
+	    } else if (sc[2] < gScores[i][2]) {
+		break;
+	    } else if (sc[3] < gScores[i][3]) {
+		pos++;
+	    } else if (sc[3] > gScores[i][3]) {
+		break;
+	    }
 	}
-	gScores[sc[0]].size++;
-	for (i = 0; i < sc[1]; i++) {
-	    pos += gScores[sc[0]][i].size;
-	}
-	gScores[sc[0]][sc[1]].size++;
-	for (i = 0; i < sc[2]; i++) {
-	    pos += gScores[sc[0]][sc[1]][i].size;
-	}
-	gScores[sc[0]][sc[1]][sc[2]].size++;
-	for (i = 0; i < sc[3]; i++) {
-	    pos += gScores[sc[0]][sc[1]][sc[2]][i].size;
-	}
-	gScores[sc[0]][sc[1]][sc[2]][sc[3]].size++;
-	*/
+	gScores.splice(pos,0,sc);
 	oli.appendChild(s);
 	pos++;
 	var prev = document.querySelectorAll('.groupList > li:nth-child('+pos+')');
