@@ -126,16 +126,16 @@ function Sociogram() {
     var vertices = [];
     var labels = {};
     var edges = [];
-	var specified = [];
+    var specified = [];
     var gedges; // used for making the groups
     var size = 0;
     var dom = {};
     var mgroups;
-	var pgroups;
+    var pgroups;
     var form;
     var text;
     var fileText;
-  
+    
 
     this.setInputs = function(fm,tx) {
 	form = fm;
@@ -160,7 +160,7 @@ function Sociogram() {
     /*
       Add a vertex with the given label providing it doesn't already exist.
       Also add the corresponding entries to the matrix of edges.
-     */
+    */
     this.addVertex = function(l,b) {
 	if (!labels.hasOwnProperty(l)) {
 	    vertices.push(l);
@@ -171,21 +171,21 @@ function Sociogram() {
 		edges[i][size] = 0;
 	    }
 	    edges[size][size] = 0;
-		specified[size] = b;
+	    specified[size] = b;
 	    size++;
 	} else {
-		var i = labels[l];
-		specified[i] ||= b;
+	    var i = labels[l];
+	    specified[i] ||= b;
 	}
     }
 
     /*
       Add an edge between two labelled vertices, adding the vertices
       if necessary.
-     */
+    */
     this.addEdge = function(a,b,e) {
-		self.addVertex(a,false);
-		self.addVertex(b,false);
+	self.addVertex(a,false);
+	self.addVertex(b,false);
 	var i = labels[a];
 	var j = labels[b];
 	if (i != j)
@@ -194,7 +194,7 @@ function Sociogram() {
     
     /*
       Get the data from the form
-     */
+    */
     this.fromForm = function(tbdy) {
 	var rows = tbdy.getElementsByTagName('tr');
 	var n = rows.length;
@@ -230,7 +230,7 @@ function Sociogram() {
 
     /*
       Get data from a string, either from a file or a text box
-     */
+    */
     this.parseText = function(txt) {
 	if (typeof txt === 'undefined' || txt == '') {
 	    alert("No data specified; either upload a file or enter some data");
@@ -257,25 +257,25 @@ function Sociogram() {
     }
 
     this.toString = function() {
-		var ignore = document.querySelector('#dncreate').checked;
+	var ignore = document.querySelector('#dncreate').checked;
 
 	var ss = [];
 	var i;
 	var pos;
 	var neg;
 	for (i = 0; i < size; i++) {
-		if (!dncreate || specified[i]) {
-	    pos = [];
-	    neg = [];
-	    edges[i].forEach(function(v,j) {
-		if (v == 1) {
-		    pos.push(vertices[j]);
-		} else if (v == -1) {
-		    neg.push(vertices[j]);
-		}
-	    });
-	    ss.push([vertices[i],pos.join(','),neg.join(',')]);
-		}
+	    if (!dncreate || specified[i]) {
+		pos = [];
+		neg = [];
+		edges[i].forEach(function(v,j) {
+		    if (v == 1) {
+			pos.push(vertices[j]);
+		    } else if (v == -1) {
+			neg.push(vertices[j]);
+		    }
+		});
+		ss.push([vertices[i],pos.join(','),neg.join(',')]);
+	    }
 	};
 	var sss = [];
 	ss.forEach(function(v) {
@@ -329,7 +329,7 @@ function Sociogram() {
 	var ndedcolsel = document.querySelector('#nodeedge');
 	var anon = document.querySelector('#anonymous').checked;
 	var ignore = document.querySelector('#dncreate').checked;
-    
+	
 	var title = document.querySelector('#title').value;
 	var cell;
 	var i,j;
@@ -339,7 +339,7 @@ function Sociogram() {
 	if (size == 0) {
 	    return;
 	}
-    
+	
 	var style = 'style="';
 	if (document.querySelector('#filled').checked) {
 	    style += 'filled,';
@@ -352,13 +352,13 @@ function Sociogram() {
 	var dot = 'strict digraph Class { splines=true; overlap=orthoyx; label="' + title + '"; labeloc=b; labeljust=center; fontsize=30; colorscheme="svg"; { node [' + style + 'shape=' + nodeshsel.value + ',color="' + ndcolsel.value + '",fillcolor="' + ndbgcolsel.value + '",fontcolor="' + ndtxtcolsel.value + '"]; ';
 
 	for (i=0; i<size; i++) {
-		if (!dncreate || specified[i]) { 
-	    if (anon) {
-		dot += 'STUDENT' + i + ' [label="STUDENT' + pad(i,2) + '"]; ';
-	    } else {
-		dot += 'STUDENT' + i + ' [label="' + vertices[i] + '"]; ';
-	    }
+	    if (!dncreate || specified[i]) { 
+		if (anon) {
+		    dot += 'STUDENT' + i + ' [label="STUDENT' + pad(i,2) + '"]; ';
+		} else {
+		    dot += 'STUDENT' + i + ' [label="' + vertices[i] + '"]; ';
 		}
+	    }
 	}
 
 	dot += '} ';
@@ -368,46 +368,46 @@ function Sociogram() {
 	    dot += '{ edge [dir="both"]; ';
 	    for (i=0; i<size; i++) {
 		for (j=i; j<size; j++) {
-		if (!dncreate || (specified[i] && specified[j])) {
-		    if (edges[i][j] == 1 && edges[j][i] == 1) {
-			dot += ' STUDENT' + i + ' -> STUDENT' + j + '; ';
-		    }
+		    if (!dncreate || (specified[i] && specified[j])) {
+			if (edges[i][j] == 1 && edges[j][i] == 1) {
+			    dot += ' STUDENT' + i + ' -> STUDENT' + j + '; ';
 			}
+		    }
 		}
 	    }
 	    dot += '} ';
 	    for (i=0; i<size; i++) {
 		for (j=0; j<size; j++) {
-		if (!dncreate || (specified[i] && specified[j])) {
-		    if (edges[i][j] == 1 && edges[j][i] != 1) {
-			dot += ' STUDENT' + i + ' -> STUDENT' + j + '; ';
+		    if (!dncreate || (specified[i] && specified[j])) {
+			if (edges[i][j] == 1 && edges[j][i] != 1) {
+			    dot += ' STUDENT' + i + ' -> STUDENT' + j + '; ';
 			}
 		    }
 		}
 	    }
 	    dot += '} ';
 	}
-    
+	
 	if (negative) {
 	    dot += '{ edge [color="' + ncolsel.value + '"]; ';
 	    dot += '{ edge [dir="both"]; ';
 	    for (i=0; i<size; i++) {
 		for (j=i; j<size; j++) {
-		if (!dncreate || (specified[i] && specified[j])) {
-		    if (edges[i][j] == -1 && edges[j][i] == -1) {
-			dot += ' STUDENT' + i + ' -> STUDENT' + j + '; ';
-		    }
+		    if (!dncreate || (specified[i] && specified[j])) {
+			if (edges[i][j] == -1 && edges[j][i] == -1) {
+			    dot += ' STUDENT' + i + ' -> STUDENT' + j + '; ';
 			}
+		    }
 		}
 	    }
 	    dot += '} ';
 	    for (i=0; i<size; i++) {
 		for (j=0; j<size; j++) {
-		if (!dncreate || (specified[i] && specified[j])) {
-		    if (edges[i][j] == -1 && edges[j][i] != -1) {
-			dot += ' STUDENT' + i + ' -> STUDENT' + j + '; ';
-		    }
+		    if (!dncreate || (specified[i] && specified[j])) {
+			if (edges[i][j] == -1 && edges[j][i] != -1) {
+			    dot += ' STUDENT' + i + ' -> STUDENT' + j + '; ';
 			}
+		    }
 		}
 	    }
 	    dot += '} ';
@@ -524,9 +524,9 @@ function Sociogram() {
 	arrow.appendChild(apath);
 	svg.appendChild(arrow);
 	/*
-    var gs = document.createElementNS("http://www.w3.org/2000/svg",'g');
-    gs.setAttribute('transform','scale(1,-1) translate(0,-' + height + ') scale(' + scale + ') translate(' + xoffset + ',' + yoffset + ')');
-    svg.appendChild(gs);
+	  var gs = document.createElementNS("http://www.w3.org/2000/svg",'g');
+	  gs.setAttribute('transform','scale(1,-1) translate(0,-' + height + ') scale(' + scale + ') translate(' + xoffset + ',' + yoffset + ')');
+	  svg.appendChild(gs);
 	*/
 	var xaxis = document.createElementNS("http://www.w3.org/2000/svg",'path');
 	xaxis.setAttribute('d','M ' + transformX(-1) + ' ' + transformY(0) + ' L ' + transformX(mp +1) + ' ' + transformY(0));
@@ -619,7 +619,7 @@ function Sociogram() {
 		label = document.createTextNode(pad(i+1,2) + ' ' + v);
 		txt.appendChild(label);
 		svg.appendChild(txt);
-	    
+		
 	    });
 	}
 	var out = document.querySelector(id);
@@ -656,7 +656,7 @@ function Sociogram() {
     var rOrder;
     var startAt;
     var valency;
-	var firstGroup;
+    var firstGroup;
 
     this.generateGroups = function(btn,id) {
 	gbtn = btn;
@@ -714,7 +714,7 @@ function Sociogram() {
 		startAt[i][j] = 0;
 	    }
 	}
-//	startAt = 0;
+	//	startAt = 0;
 
 	var sds = document.querySelector('#seeds').value;
 	var re = /[\r\n]+/;
@@ -736,10 +736,10 @@ function Sociogram() {
 
 	var cpy = [];
 	for (var i = 0; i < partition.length; i++) {
-		cpy.push([]);
-		for (var j = 0; j < partition.length; j++) {
-			cpy[i].push(partition[i][j]);
-		}
+	    cpy.push([]);
+	    for (var j = 0; j < partition.length; j++) {
+		cpy[i].push(partition[i][j]);
+	    }
 	}
 
 	// Initialise:
@@ -754,11 +754,11 @@ function Sociogram() {
 	    gedges[i] = [];
 	    for (j = 0; j < size; j++) {
 		if ((edges[i][j] == -1) || (edges[j][i] == -1)) {
-			if (gnegative) {
-				gedges[i][j] = 0;
-			} else {
-				gedges[i][j] = -1;
-			}
+		    if (gnegative) {
+			gedges[i][j] = 0;
+		    } else {
+			gedges[i][j] = -1;
+		    }
 		} else {
 		    gedges[i][j] = edges[i][j];
 		}
@@ -802,19 +802,19 @@ function Sociogram() {
 	
 	firstGroup = -1;
 	for (var i = 0; i < partition.length; i++) {
-		if (seeds[i] < partition[i].length) {
-			firstGroup = i;
-			break;
-		}
+	    if (seeds[i] < partition[i].length) {
+		firstGroup = i;
+		break;
+	    }
 	}
 
 	if (firstGroup == -1) {
-		self.displayPartition(partition,list);
+	    self.displayPartition(partition,list);
 	} else {
-	
-		self.startQueue();
-//	startAt = 0;
-		self.doPartition(partition,seeds,0,firstGroup,seeds[firstGroup],gstrong,list);
+	    
+	    self.startQueue();
+	    //	startAt = 0;
+	    self.doPartition(partition,seeds,0,firstGroup,seeds[firstGroup],gstrong,list);
 	}
     }
 
@@ -836,7 +836,7 @@ function Sociogram() {
       If we're at the end of the list of vertices, backtracking means
       going to the previous position in the group, or the previous
       group if we're at the start.
-     */
+    */
     this.doPartition = function(p,m,r,s,t,b,o) {
 	if (r == size) {
 
@@ -846,13 +846,13 @@ function Sociogram() {
 		if (s == firstGroup) {
 		    // We've backtracked all the way to the start, so restart with a different starting point.
 		    startAt[firstGroup][ m[firstGroup] ]++;
-						
-			// clear our save stack
-/*			mgroups = {};
-			for (var grp in pgroups) {
-				mgroups[grp] = true;
-			}
-*/
+		    
+		    // clear our save stack
+		    /*			mgroups = {};
+					for (var grp in pgroups) {
+					mgroups[grp] = true;
+					}
+		    */
 		    var stop = false;
 		    for (var i = firstGroup; i < startAt.length; i++) {
 			for (var j = m[i]; j < startAt[i].length; j++) {
@@ -973,16 +973,16 @@ function Sociogram() {
 	}
 	if (add) {
 	    // Okay, so we're adding.
-		// First, save this partition so we don't repeat ourselves
-		mgroups[self.namePartition(p,s,t,m,startAt)] = true;
+	    // First, save this partition so we don't repeat ourselves
+	    mgroups[self.namePartition(p,s,t,m,startAt)] = true;
 	    // Now step onwards
 	    if (t == p[s].length - 1) {
 		// End of group,
 		if (s == p.length - 1) {
 		    // Full partition, so display
-			self.displayPartition(p,o);
-			// Restart from a completely fresh position
-			pgroups[self.namePartition(p,s,t,m,startAt)] = true;
+		    self.displayPartition(p,o);
+		    // Restart from a completely fresh position
+		    pgroups[self.namePartition(p,s,t,m,startAt)] = true;
 
 		    startAt[0][ m[0] ]++;
 
@@ -1017,7 +1017,7 @@ function Sociogram() {
 	    self.addToQueue([p,m,r+1,s,t,b,o]);
 	}
     }
-	
+    
     this.namePartition = function(p,s,t,m,st) {
 	var pp = [];
 	var i,j,ss;
@@ -1047,17 +1047,17 @@ function Sociogram() {
 	pp[s] = [];
 
 	for (i = t+1; i < p[s].length; i++) {
-		pp[s][i] = st[s][i];
+	    pp[s][i] = st[s][i];
 	}
 	
 	for (i = s+1; i < p.length; i++) {
-		pp[i] = [];
-		for (j = 0; j < m[i]; j++) {
-			pp[i][j] = p[i][j];
-		}
-		for (j = m[i]; j < p[i].length; j++) {
-			pp[i][j] = st[i][j];
-		}
+	    pp[i] = [];
+	    for (j = 0; j < m[i]; j++) {
+		pp[i][j] = p[i][j];
+	    }
+	    for (j = m[i]; j < p[i].length; j++) {
+		pp[i][j] = st[i][j];
+	    }
 	}
 
 	for (i = s; i < p.length; i++) {
@@ -1199,7 +1199,7 @@ function Sociogram() {
 	return [pout,pinc,nout,ninc];
     }
     
-	this.scoreGroup = function(g,s) {
+    this.scoreGroup = function(g,s) {
 	var j,k,l;
 	var inc;
 	var out;
@@ -1251,61 +1251,61 @@ function Sociogram() {
 	    s += 0;
 	}
 	/*
-	    // Is it weakly connected?
-	    if (minArray(con) == 1) {
-		s += 1;
-	    } else {
-		s += 0;
-	    }
+	// Is it weakly connected?
+	if (minArray(con) == 1) {
+	s += 1;
+	} else {
+	s += 0;
+	}
 	*/
 	/*
 	// Does every node have an incoming arrow?
 	if (minArray(inc) == 1)
-	    s += 1;
+	s += 1;
 	// Does every node have an outgoing arrow?
 	if (minArray(out) == 1)
-	    s += 2;
+	s += 2;
 	if (minArray(con) == 1)
-	    s += 4;
+	s += 4;
 	*/
 	return s;
 
     }
 
-	this.scoreGroupElements = function(g) {
-		var pout = 0;
-		var pinc = 0;
-		var nout = 0;
-		var ninc = 0;
-		var tpout, tpinc, tnout, tninc;
-		for (var j = 0; j < g.length; j++) {
-			tpout = 0;
-			tpinc = 0;
-			tnout = 0;
-			tninc = 0;
-			for (var k = 0; k < g.length; k++) {
-				if (j != k) {
-					if (edges[g[j]][g[k]] == 1) {
-						tpout = 1;
-					}
-					if (edges[g[j]][g[k]] == -1) {
-						tnout = 1;
-					}
-					if (edges[g[k]][g[j]] == 1) {
-						tpinc = 1;
-					}
-					if (edges[g[k]][g[j]] == -1) {
-						tninc = 1;
-					}
-				}
-			}
-			pout += tpout;
-			pinc += tpinc;
-			nout += tnout;
-			ninc += tninc;
+    this.scoreGroupElements = function(g) {
+	var pout = 0;
+	var pinc = 0;
+	var nout = 0;
+	var ninc = 0;
+	var tpout, tpinc, tnout, tninc;
+	for (var j = 0; j < g.length; j++) {
+	    tpout = 0;
+	    tpinc = 0;
+	    tnout = 0;
+	    tninc = 0;
+	    for (var k = 0; k < g.length; k++) {
+		if (j != k) {
+		    if (edges[g[j]][g[k]] == 1) {
+			tpout = 1;
+		    }
+		    if (edges[g[j]][g[k]] == -1) {
+			tnout = 1;
+		    }
+		    if (edges[g[k]][g[j]] == 1) {
+			tpinc = 1;
+		    }
+		    if (edges[g[k]][g[j]] == -1) {
+			tninc = 1;
+		    }
 		}
-		return [pout,-nout,pinc,-ninc];
+	    }
+	    pout += tpout;
+	    pinc += tpinc;
+	    nout += tnout;
+	    ninc += tninc;
 	}
+	return [pout,-nout,pinc,-ninc];
+    }
     
     this.scorePartition = function(p) {
 	// Score a partition by scoring its groups
@@ -1419,23 +1419,32 @@ function Sociogram() {
 	    pnt.insertBefore(grptbl,pnt.firstChild);
 	}
 	grptbl.innerHTML = '';
-	var s = document.createElement('ul');
 	var a,i,j,li,txt,spn,score,hlst,hlstelt;
+	var scelt = document.createElement('span');
+	grptbl.appendChild(scelt);
+	var s = document.createElement('ul');
+	var btn = document.createElement('button');
+	btn.appendChild(document.createTextNode('copy to clipboard'));
+	btn.onclick = function(e) {
+	    e.preventDefault();
+	    self.copyPartitionToClipboard();
+	    return false;
+	};
 	var sc = [0,0,0,0];
 	for (i = 0; i < p.length; i++) {
 	    li = document.createElement('li');
-		li.classList.add('editableSingleGroup');
+	    li.classList.add('editableSingleGroup');
 
 	    txt = document.createTextNode('(' + self.scoreGroup(p[i],'') + ') ');
 	    spn = document.createElement('span');
 	    spn.classList.add('score');
-		spn.setAttribute('id', 'Score' + i);
+	    spn.setAttribute('id', 'Score' + i);
 	    spn.appendChild(txt);
-		
+	    
 	    li.appendChild(spn);
-		hlst = document.createElement('ul');
-		hlst.classList.add('horizontalList');
-		hlst.setAttribute('id', 'Group' + i);
+	    hlst = document.createElement('ul');
+	    hlst.classList.add('horizontalList');
+	    hlst.setAttribute('id', 'Group' + i);
 	    
 	    for (j = 0; j < p[i].length; j++) {
 
@@ -1464,89 +1473,135 @@ function Sociogram() {
 		hlstelt.appendChild(spn);
 		hlst.appendChild(hlstelt);
 	    }
-		li.appendChild(hlst);
-		new Sortable(hlst, {
+	    li.appendChild(hlst);
+	    new Sortable(hlst, {
 		group: 'editableGroup',
 		animation: 150,
 		fallbackOnBody: true,
 		swapThreshold: 0.65,
 		onEnd: function (evt) {
-			self.resetRelationships();
-			self.resetScores(evt.to);
-			self.resetScores(evt.from);
+		    self.resetRelationships();
+		    self.resetScores(evt.to);
+		    self.resetScores(evt.from);
+		    self.resetPartitionScore(scelt);
 		},
 		onStart: function (evt) {
-			var id = parseInt(evt.item.getAttribute('id').substring(7));
-			self.showRelationships(id);
+		    var id = parseInt(evt.item.getAttribute('id').substring(7));
+		    self.showRelationships(id);
 		}
-	});
+	    });
 	    
+	    score = self.scoreGroupElements(p[i]);
+
+	    for (var j = 0; j < score.length; j++) {
+		sc[j] += score[j];
+	    }
 	    s.appendChild(li);
 	}
 	grptbl.appendChild(s);
+	grptbl.appendChild(btn);
+	
+	scelt.appendChild(document.createTextNode("(" + sc.join(",") + ")"));
+    }
+
+    this.copyPartitionToClipboard = function() {
+	var p = [];
+	Array.from(document.querySelectorAll('.editableSingleGroup > ul')).forEach(
+	    function(el) {
+		var elts = el.children;
+		var grp = [];
+		for (e of elts) {
+		    grp.push(e.getElementsByTagName('span')[0].innerHTML);
+		}
+		p.push(grp.join(", "));
+	    }
+	)
+	copyToClipboard(p.join("\n"));
+    }
+
+    this.resetPartitionScore = function(scelt) {
+	scelt.innerHTML = '';
+	var sc = [0,0,0,0];
+	Array.from(document.querySelectorAll('.editableSingleGroup > ul')).forEach(
+	    function(el) {
+		var elts = el.children;
+		var grp = [];
+		var id;
+		for (e of elts) {
+		    id = e.getAttribute('id');
+		    grp.push(parseInt(id.substring(7)));
+		}
+		var score = self.scoreGroupElements(grp);
+		for (var j = 0; j < score.length; j++) {
+		    sc[j] += score[j];
+		}
+	    }
+	);
+	
+	scelt.appendChild(document.createTextNode("(" + sc.join(",") + ")"));
+
+    }
+    
+    this.showRelationships = function(i) {
+	var spn;
+	for (var j = 0; j < size; j++) {
+	    spn = document.getElementById('Element' + j).getElementsByTagName('span')[0];
+	    if (gedges[i][j] == -1) {
+		spn.classList.add('negativeTemp');
+	    } else if (gedges[i][j] == 1 && gedges[j][i] == 1) {
+		spn.classList.add('inoutPositiveTemp');
+	    } else if (gedges[i][j] == 1) {
+		spn.classList.add('incomingPositiveTemp');
+	    } else if (gedges[j][i] == 1) {
+		spn.classList.add('outgoingPositiveTemp');
+	    }
+	}
+    }
+    
+    this.resetRelationships = function() {
+	var classes = ['negativeTemp', 'incomingPositiveTemp', 'outgoingPositiveTemp', 'inoutPositiveTemp'];
+	for (var c of classes) {
+	    Array.from(document.querySelectorAll("." + c)).forEach(
+		(el) => el.classList.remove(c)
+	    );
+	}
+    }
+    
+    this.resetScores = function(lst) {
+	var elts = lst.children;
+	var grp = [];
+	var spans = [];
+	var id;
+	for (e of elts) {
+	    id = e.getAttribute('id');
+	    grp.push(parseInt(id.substring(7)));
+	    spans.push(e.getElementsByTagName('span')[0]);
+	}
+	var score;
+	for (var i = 0; i < grp.length; i++) {
+	    score = self.checkElementInGroup(grp,i);
+	    spans[i].classList.remove(...spans[i].classList);
+	    spans[i].classList.add('groupElement');
+	    if (score[0] > 0 && score[1] > 0) {
+		spans[i].classList.add('inoutPositive');
+	    } else if (score[0] > 0) {
+		spans[i].classList.add('outgoingPositive');
+	    } else if (score[1] > 0) {
+		spans[i].classList.add('incomingPositive');
+	    }
+	    if (score[2] > 0 || score [3] > 0) {
+		spans[i].classList.add('negative');
+	    }
+
+	}
+	var id = lst.getAttribute('id');
+	var txt = document.createTextNode('(' + self.scoreGroup(grp,'') + ') ');
+	var spn = document.getElementById('Score' + id.substring(5) );
+	spn.innerHTML = '';
+	spn.appendChild(txt);
 	
     }
     
-	this.showRelationships = function(i) {
-		var spn;
-		for (var j = 0; j < size; j++) {
-			spn = document.getElementById('Element' + j).getElementsByTagName('span')[0];
-			if (gedges[i][j] == -1) {
-				spn.classList.add('negativeTemp');
-			} else if (gedges[i][j] == 1 && gedges[j][i] == 1) {
-				spn.classList.add('inoutPositiveTemp');
-			} else if (gedges[i][j] == 1) {
-				spn.classList.add('incomingPositiveTemp');
-			} else if (gedges[j][i] == 1) {
-				spn.classList.add('outgoingPositiveTemp');
-			}
-		}
-	}
-	
-	this.resetRelationships = function() {
-		var classes = ['negativeTemp', 'incomingPositiveTemp', 'outgoingPositiveTemp', 'inoutPositiveTemp'];
-		for (var c of classes) {
-			Array.from(document.querySelectorAll("." + c)).forEach(
-				(el) => el.classList.remove(c)
-			);
-		}
-	}
-	
-	this.resetScores = function(lst) {
-		var elts = lst.children;
-		var grp = [];
-		var spans = [];
-		var id;
-		for (e of elts) {
-			id = e.getAttribute('id');
-			grp.push(parseInt(id.substring(7)));
-			spans.push(e.getElementsByTagName('span')[0]);
-		}
-		var score;
-		for (var i = 0; i < grp.length; i++) {
-			score = self.checkElementInGroup(grp,i);
-			spans[i].classList.remove(...spans[i].classList);
-			spans[i].classList.add('groupElement');
-		if (score[0] > 0 && score[1] > 0) {
-		    spans[i].classList.add('inoutPositive');
-		} else if (score[0] > 0) {
-		    spans[i].classList.add('outgoingPositive');
-		} else if (score[1] > 0) {
-		    spans[i].classList.add('incomingPositive');
-		}
-		if (score[2] > 0 || score [3] > 0) {
-		    spans[i].classList.add('negative');
-		}
-
-		}
-		var id = lst.getAttribute('id');
-		var txt = document.createTextNode('(' + self.scoreGroup(grp,'') + ') ');
-		var spn = document.getElementById('Score' + id.substring(5) );
-		spn.innerHTML = '';
-		spn.appendChild(txt);
-
-	}
-	
 }
 
 
@@ -1609,4 +1664,43 @@ function minArray(a) {
 	    m = a[i];
     }
     return m;
+}
+
+function copyToClipboard(text) {
+    // create hidden text element, if it doesn't already exist
+    var targetId = "_hiddenCopyText_";
+    var origSelectionStart, origSelectionEnd;
+    // must use a temporary form element for the selection and copy
+    var target = document.getElementById(targetId);
+    if (!target) {
+        var target = document.createElement("textarea");
+        target.style.position = "absolute";
+        target.style.left = "-9999px";
+        target.style.top = "0";
+        target.id = targetId;
+        document.body.appendChild(target);
+    }
+    target.textContent = text;
+
+    // select the content
+    var currentFocus = document.activeElement;
+    target.focus();
+    target.setSelectionRange(0, target.value.length);
+    
+    // copy the selection
+    var succeed;
+    try {
+    	succeed = document.execCommand("copy");
+    } catch(e) {
+        succeed = false;
+    }
+    // restore original focus
+    if (currentFocus && typeof currentFocus.focus === "function") {
+        currentFocus.focus();
+    }
+    
+    // clear temporary content
+    target.textContent = "";
+
+    return succeed;
 }
